@@ -1,0 +1,12 @@
+special
+
+#me
+show me your specials
+
+#bot
+Today we have a great special for you!
+CARDS Mandarin Oriental, Bangkok
+BUTTONS Book This Hotel|Show on Tripadvisor
+JSON_PATH $.data._cognigy._facebook.message.attachment.payload.template_type | generic
+JSON_PATH $.data._cognigy._facebook.message.attachment.payload.elements.length | 1
+JSON_PATH $.data._cognigy._facebook.message.attachment.payload.elements[0].title | Mandarin Oriental, Bangkok

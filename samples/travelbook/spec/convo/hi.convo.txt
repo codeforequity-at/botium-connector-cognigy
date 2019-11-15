@@ -1,0 +1,15 @@
+hi
+
+#me
+hi there
+
+#bot
+Welcome to Cognigy Travel Asia. We have the best hotels in the region. Right now we're covering Tokyo and Bangkok. Where would you like to go?
+BUTTONS Tokyo|Bangkok
+
+#me
+BUTTON Tokyo
+
+#bot
+Here are some great hotels in Tokyo
+CARDS Conrad Tokyo|Mandarin Oriental Tokyo|Palace Hotel Tokyo

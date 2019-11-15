@@ -1,0 +1,21 @@
+book a flight
+
+#me
+i want to book a flight
+
+#bot
+Say where you wanna go
+
+#me
+Vienna
+
+#bot
+Sorry, we don't have hotels in Vienna. We can only help with Tokyo and Bangkok at the moment.
+
+#me
+then Bangkok
+
+#bot
+Here are some great hotels in Bangkok
+CARDS Pruksa Hostel Bangkok|The Okura Prestige Bangkok|Lancaster Bangkok
+BUTTONS Book This Hotel|Tripadvisor
