@@ -1,0 +1,40 @@
+{
+  "name": "botium-connector-cognigy",
+  "version": "0.0.1",
+  "description": "Botium Connector for Cognigy AI",
+  "main": "dist/botium-connector-cognigy-cjs.js",
+  "module": "dist/botium-connector-cognigy-es.js",
+  "scripts": {
+    "build": "npm run eslint && rollup -c",
+    "eslint": "eslint index.js",
+    "eslint-fix": "eslint --fix index.js"
+  },
+  "author": "Botium GmbH",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.6.2",
+    "@babel/node": "^7.6.2",
+    "@babel/plugin-transform-runtime": "^7.6.2",
+    "@babel/preset-env": "^7.6.2",
+    "eslint": "^6.5.0",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-node": "^10.0.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "rollup": "^1.21.2",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-json": "^4.0.0",
+    "rollup-plugin-node-resolve": "^5.2.0"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.6.2",
+    "debug": "^4.1.1",
+    "lodash": "^4.17.15",
+    "mime-types": "^2.1.24"
+  },
+  "peerDependencies": {
+    "botium-core": ">= 1.7.3"
+  }
+}
