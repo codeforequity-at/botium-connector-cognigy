@@ -51,7 +51,7 @@ _Already integrated into Botium Box, no setup required_
 ## Connecting Cognigy AI chatbot to Botium
 
 1. In your Cognigy project, deploy a [REST Endpoint](https://docs.cognigy.com/v3.0/docs/deploy-a-rest-endpoint)
-2. Create a botium.json in your project directory and add your Cogingy Endpoint URL
+2. Create a botium.json in your project directory and add your Cognigy Endpoint URL
 
 ```
 {
@@ -59,13 +59,33 @@ _Already integrated into Botium Box, no setup required_
     "Capabilities": {
       "PROJECTNAME": "<whatever>",
       "CONTAINERMODE": "cognigy",
-      "COGNIGY_URL": "https://endpoint-demo.cognigy.ai/xxxxxxxxxxxxxxxxxxxxxx"
+      "COGNIGY_URL": "https://endpoint-demo.cognigy.ai/xxxxxxxxxxxxxxxxxxxxxx",
     }
   }
 }
 ```
+3. (Optional) If you want to enable NLP Analytics (Intent Resolution, Confidence Score), follow these steps:
 
-3. To check the configuration, run the emulator (Botium CLI required) to bring up a chat interface in your terminal window:
+    3.1. Enable [Collect Analytics](https://docs.cognigy.com/docs/data-management#collect-analytics) in your Entpoint Settings
+    3.2. Find your [Cognigy OData Endpoint](https://docs.cognigy.com/docs/odata-analytics-endpoint)
+    3.3. Create an [Api Key](https://docs.cognigy.com/docs/my-profile#api-keys) in your Cognigy Profile
+    3.4. Adjust the botium.json file:
+```
+    {
+      "botium": {
+        "Capabilities": {
+          "PROJECTNAME": "<whatever>",
+          "CONTAINERMODE": "cognigy",
+          "COGNIGY_URL": "https://endpoint-demo.cognigy.ai/xxxxxxxxxxxxxxxxxxxxxx",
+          "COGNIGY_NLP_ANALYTICS_ENABLE": true,
+          "COGNIGY_NLP_ANALYTICS_ODATA_URL": "https://odata-demo.cognigy.ai",
+          "COGNIGY_NLP_ANALYTICS_ODATA_APIKEY": "xxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      }
+    }
+```
+
+4. To check the configuration, run the emulator (Botium CLI required) to bring up a chat interface in your terminal window:
 
 ```
 > botium-cli emulator
@@ -93,7 +113,31 @@ Cognigy REST Endpoint URL
 ### COGNIGY_USER_ID
 User id
 
-Optional. Will be a generated GUID by default. 
+Optional. Will be a generated GUID by default.
+
+### COGNIGY_NLP_ANALYTICS_ENABLE
+Enable NLP Analyics (Intent Resolution, Confidence Score)
+
+Disable if you don't need this feature (faster responses)
+
+### COGNIGY_NLP_ANALYTICS_ODATA_URL
+Cognigy OData Analyics Endpoint
+
+Optional. Only needed if NLP Analyics is enabled.
+
+More about Cognigy Odata Endpoint you can find in [Cognigy Docs - OData Analyics Endpoint](https://docs.cognigy.com/docs/odata-analytics-endpoint)
+
+### COGNIGY_NLP_ANALYTICS_ODATA_APIKEY
+OData Api Key
+
+Optional. Only needed if NLP Analyics is enabled.
+
+More about Cognigy Api Keys you can find in [Cognigy Docs - Api Keys](https://docs.cognigy.com/docs/my-profile#api-keys)
+
+### COGNIGY_NLP_ANALYTICS_WAIT
+Time to wait for fetching NLP Analyics Data after each Convo Step (in milliseconds)
+
+Default: 5000
 
 ### Roadmap
 * Support for additional channel content
