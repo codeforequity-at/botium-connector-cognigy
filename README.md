@@ -67,8 +67,11 @@ _Already integrated into Botium Box, no setup required_
 3. (Optional) If you want to enable NLP Analytics (Intent Resolution, Confidence Score), follow these steps:
 
     3.1. Enable [Collect Analytics](https://docs.cognigy.com/docs/data-management#collect-analytics) in your Entpoint Settings
+
     3.2. Find your [Cognigy OData Endpoint](https://docs.cognigy.com/docs/odata-analytics-endpoint)
+
     3.3. Create an [Api Key](https://docs.cognigy.com/docs/my-profile#api-keys) in your Cognigy Profile
+
     3.4. Adjust the botium.json file:
 ```
     {
