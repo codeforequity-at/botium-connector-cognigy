@@ -1,6 +1,6 @@
 {
   "name": "botium-connector-cognigy",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Botium Connector for Cognigy AI",
   "main": "dist/botium-connector-cognigy-cjs.js",
   "module": "dist/botium-connector-cognigy-es.js",
@@ -32,7 +32,8 @@
     "@babel/runtime": "^7.6.2",
     "debug": "^4.1.1",
     "lodash": "^4.17.15",
-    "mime-types": "^2.1.24"
+    "mime-types": "^2.1.24",
+    "request-promise-native": "^1.0.9"
   },
   "peerDependencies": {
     "botium-core": ">= 1.7.3"
