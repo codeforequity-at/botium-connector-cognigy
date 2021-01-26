@@ -5,7 +5,7 @@
   "main": "dist/botium-connector-cognigy-cjs.js",
   "module": "dist/botium-connector-cognigy-es.js",
   "scripts": {
-    "build": "npm run eslint && rollup -c",
+    "build": "npm run eslint && rollup -c && cp logo.png dist",
     "eslint": "eslint index.js",
     "eslint-fix": "eslint --fix index.js"
   },
