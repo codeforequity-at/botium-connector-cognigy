@@ -1,0 +1,16 @@
+reservation
+
+#me
+hello
+
+#bot
+BUTTONS 🥘 Order now|📅 Make a reservation|📍 View locations
+
+#me
+BUTTON I'd like to make a reservation
+
+#bot
+BUTTONS Wien|Győr|Mars|some McDonalds
+
+#me
+BUTTON Vienna|Wien

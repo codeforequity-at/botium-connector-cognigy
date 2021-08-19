@@ -78,12 +78,27 @@ class BotiumConnectorCognigy {
               debug(`Cannot process nlp data: ${err}`)
             }
           }
-          const qrs = _.get(botMsg.sourceData, 'data._cognigy._facebook.message.quick_replies')
+
+          // As i see the channel is bound to the endpoint. So we dont need an extra cap to choose it.
+          // And we can read the response dynamical (more specific first?).
+          // Or multi channel responses are possible?
+          const qrs =
+            _.get(botMsg.sourceData, 'data._cognigy._facebook.message.quick_replies') ||
+            _.get(botMsg.sourceData, 'data._cognigy._default._quickReplies.quickReplies')
           if (qrs) {
             botMsg.buttons = qrs.map(qr => ({
               text: qr.title,
               payload: qr.payload,
               imageUri: qr.image_url
+            }))
+          }
+
+          const buttons =
+            _.get(botMsg.sourceData, 'data._cognigy._default._buttons.buttons')
+          if (buttons) {
+            botMsg.buttons = buttons.map(qr => ({
+              text: qr.title,
+              payload: qr.payload || qr.url || qr.intentName
             }))
           }
 

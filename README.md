@@ -1,4 +1,4 @@
-# Botium Connector for Cognigy AI
+0# Botium Connector for Cognigy AI
 
 [![NPM](https://nodei.co/npm/botium-connector-cognigy.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/botium-connector-cognigy/)
 
@@ -143,6 +143,6 @@ Time to wait for fetching NLP Analyics Data after each Convo Step (in millisecon
 Default: 5000
 
 ### Roadmap
-* Support for additional channel content
+* Support for additional channel and channel content
 * Support for intent/entity asserter
 * Support for sentiment analyze

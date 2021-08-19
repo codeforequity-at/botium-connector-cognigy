@@ -1,0 +1,19 @@
+{
+  "name": "botium-cognigy-travelbook-sample",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "mocha spec"
+  },
+  "botium": {
+    "convodirs": [
+      "spec/convo"
+    ],
+    "expandConvos": true,
+    "expandUtterancesToConvos": false
+  },
+  "devDependencies": {
+    "botium-bindings": "latest",
+    "botium-connector-cognigy": "../../",
+    "mocha": "latest"
+  }
+}
