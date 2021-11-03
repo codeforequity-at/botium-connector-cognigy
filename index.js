@@ -117,6 +117,7 @@ class BotiumConnectorCognigy {
         }
       }
       debug(`Validate delegateCaps ${util.inspect(this.delegateCaps)}`)
+      this.delegateCaps = Object.assign({}, this.caps, this.delegateCaps)
       this.delegateContainer = new SimpleRestContainer({ queueBotSays: this.queueBotSays, caps: this.delegateCaps })
     }
 
