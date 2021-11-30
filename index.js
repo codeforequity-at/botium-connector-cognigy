@@ -46,8 +46,8 @@ class BotiumConnectorCognigy {
           sessionId: '{{botium.conversationId}}',
           text: '{{msg.messageText}}'
         },
-        [CoreCapabilities.SIMPLEREST_RESPONSE_JSONPATH]: '$.text',
-        [CoreCapabilities.SIMPLEREST_RESPONSE_HOOK]: async ({ botMsg }) => {
+        [CoreCapabilities.SIMPLEREST_BODY_JSONPATH]: '$.outputStack.*',
+        [CoreCapabilities.SIMPLEREST_RESPONSE_HOOK]: async ({ botMsg, botMsgRoot }) => {
           const sessionId = botMsg.sourceData.sessionId
 
           const sleep = async ms => {
@@ -79,12 +79,24 @@ class BotiumConnectorCognigy {
             }
           }
 
+          const botMsgs = []
+          let qrsText = _.get(botMsgRoot, 'data._data._cognigy._default._quickReplies.text')
+          if (_.isNil(qrsText)) {
+            qrsText = _.get(botMsgRoot, 'data._plugin.type')
+            if (qrsText) qrsText = `[${qrsText}]`
+          }
+          if (qrsText) {
+            botMsgs.push(qrsText)
+          } else {
+            botMsgs.push(_.get(botMsgRoot, 'text'))
+          }
+
+          botMsg.messageText = [...new Set(botMsgs)].join(' ')
+
           // As i see the channel is bound to the endpoint. So we dont need an extra cap to choose it.
           // And we can read the response dynamical (more specific first?).
           // Or multi channel responses are possible?
-          const qrs =
-            _.get(botMsg.sourceData, 'data._cognigy._facebook.message.quick_replies') ||
-            _.get(botMsg.sourceData, 'data._cognigy._default._quickReplies.quickReplies')
+          const qrs = _.get(botMsgRoot, 'data._data._cognigy._default._quickReplies.quickReplies')
           if (qrs) {
             botMsg.buttons = qrs.map(qr => ({
               text: qr.title,
@@ -94,7 +106,7 @@ class BotiumConnectorCognigy {
           }
 
           const buttons =
-            _.get(botMsg.sourceData, 'data._cognigy._default._buttons.buttons')
+            _.get(botMsgRoot, 'data._data._cognigy._default._buttons.buttons')
           if (buttons) {
             botMsg.buttons = buttons.map(qr => ({
               text: qr.title,
@@ -102,12 +114,24 @@ class BotiumConnectorCognigy {
             }))
           }
 
-          const ges = _.get(botMsg.sourceData, 'data._cognigy._facebook.message.attachment.payload.elements')
+          const media =
+            _.get(botMsgRoot, 'data._data._cognigy._default._image') ||
+            _.get(botMsgRoot, 'data._data._cognigy._default._audio') ||
+            _.get(botMsgRoot, 'data._data._cognigy._default._video')
+          if (media) {
+            botMsg.media = [{
+              mediaUri: media.imageUrl || media.audioUrl || media.videoUrl,
+              altText: ''
+            }]
+          }
+
+          const ges = _.get(botMsgRoot, 'data._data._cognigy._default._gallery.items') ||
+            _.get(botMsgRoot, 'data._data._cognigy._default._list.items')
           if (ges) {
             botMsg.cards = ges.map(ge => ({
               text: ge.title,
               subtext: ge.subtitle,
-              image: ge.image_url && { mediaUri: ge.image_url },
+              image: ge.imageUrl && { mediaUri: ge.imageUrl },
               buttons: ge.buttons && ge.buttons.map(b => ({
                 text: b.title,
                 payload: b.payload
