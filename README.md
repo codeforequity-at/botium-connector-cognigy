@@ -1,4 +1,4 @@
-0# Botium Connector for Cognigy AI
+# Botium Connector for Cognigy AI
 
 [![NPM](https://nodei.co/npm/botium-connector-cognigy.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/botium-connector-cognigy/)
 
