@@ -72,12 +72,22 @@ class BotiumConnectorCognigy {
                 }
               }
               debug('NLP ODATA Request: ' + JSON.stringify(requestOptions, null, 2))
-              await sleep(this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_WAIT] || 5000)
-              const data = JSON.parse(await request(requestOptions))
-              debug('NLP ODATA Response: ' + JSON.stringify(data, null, 2))
 
-              botMsg.nlp = {
-                intent: this._extractIntent(data)
+              const until = Date.now() + (this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_WAIT] || 5000)
+              while (true) {
+                if (until < Date.now()) break
+
+                await sleep(1000)
+
+                const dataRaw = await request(requestOptions)
+                debug('NLP ODATA Response: ' + JSON.stringify(dataRaw, null, 2))
+                try {
+                  const data = JSON.parse(dataRaw)
+                  botMsg.nlp = {
+                    intent: this._extractIntent(data)
+                  }
+                  if (botMsg.nlp.intent.name) break
+                } catch (jsonParseErr) {}
               }
             } catch (err) {
               debug(`Cannot process nlp data: ${err.message}`)
