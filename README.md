@@ -142,6 +142,12 @@ Time to wait for fetching NLP Analyics Data after each Convo Step (in millisecon
 
 Default: 5000
 
+### COGNIGY_API_URL
+For downloading intents and user examples
+
+### COGNIGY_API_APIKEY
+For downloading intents and user examples
+
 ### Roadmap
 * Support for additional channel and channel content
 * Support for intent/entity asserter

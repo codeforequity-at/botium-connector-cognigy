@@ -4,6 +4,9 @@
   "description": "Botium Connector for Cognigy AI",
   "main": "dist/botium-connector-cognigy-cjs.js",
   "module": "dist/botium-connector-cognigy-es.js",
+  "bin": {
+    "botium-connector-cognigy-cli": "./bin/cli.js"
+  },
   "scripts": {
     "build": "npm run eslint && rollup -c && cp logo.png dist",
     "eslint": "eslint index.js",
@@ -30,11 +33,15 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.6.2",
+    "@cognigy/rest-api-client": "^0.11.0",
     "debug": "^4.1.1",
     "lodash": "^4.17.15",
     "mime-types": "^2.1.24",
+    "mkdirp": "^1.0.4",
     "request": "^2.88.2",
-    "request-promise-native": "^1.0.9"
+    "request-promise-native": "^1.0.9",
+    "slug": "^5.1.0",
+    "yargs": "^17.3.0"
   },
   "peerDependencies": {
     "botium-core": ">= 1.7.3"
