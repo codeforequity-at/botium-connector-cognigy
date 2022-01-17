@@ -54,8 +54,8 @@ module.exports = {
       },
       {
         name: 'COGNIGY_NLP_ANALYTICS_WAIT',
-        label: 'COGNIGY_NLP_ANALYTICS_WAIT',
-        description: 'Time (in ms) to wait for fetching NLP Analyics Data after each Convo Step (Default: 5000)',
+        label: 'OData NLP Timeout',
+        description: 'Time (in ms) to wait for availability of NLP Analyics Data after each Convo Step (Default: 5000ms)',
         type: 'int',
         required: false,
         advanced: true

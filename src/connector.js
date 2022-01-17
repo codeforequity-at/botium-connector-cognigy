@@ -13,11 +13,19 @@ const Capabilities = {
   COGNIGY_NLP_ANALYTICS_ODATA_URL: 'COGNIGY_NLP_ANALYTICS_ODATA_URL',
   COGNIGY_NLP_ANALYTICS_ODATA_APIKEY: 'COGNIGY_NLP_ANALYTICS_ODATA_APIKEY',
   COGNIGY_NLP_ANALYTICS_WAIT: 'COGNIGY_NLP_ANALYTICS_WAIT',
+  COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL: 'COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL',
   COGNIGY_API_URL: 'COGNIGY_API_URL',
   COGNIGY_API_APIKEY: 'COGNIGY_API_APIKEY'
 }
 
 const Defaults = {
+  [Capabilities.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL]: 5000
+}
+
+const _sleep = async ms => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
 }
 
 class BotiumConnectorCognigy {
@@ -50,47 +58,48 @@ class BotiumConnectorCognigy {
         [CoreCapabilities.SIMPLEREST_RESPONSE_HOOK]: async ({ botMsg, botMsgRoot }) => {
           const sessionId = botMsg.sourceData.sessionId
 
-          const sleep = async ms => {
-            return new Promise((resolve) => {
-              setTimeout(resolve, ms)
-            })
-          }
-
           if (sessionId && this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ENABLE]) {
-            try {
-              const isV20 = `${this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ODATA_URL]}`.indexOf('v2.0') > 0
+            const isV20 = `${this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ODATA_URL]}`.indexOf('v2.0') > 0
 
-              const requestOptions = {
-                method: 'GET',
-                url: isV20 ? `${this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ODATA_URL]}/Inputs/` : `${this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ODATA_URL]}/Records/`,
-                qs: {
-                  $select: 'intent,intentScore,timestamp',
-                  $top: 100000,
-                  $orderby: 'timestamp desc',
-                  $filter: `sessionId eq '${sessionId}' or sessionId eq '${Date.now()}'`,
-                  apikey: this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ODATA_APIKEY]
-                }
-              }
-              debug('NLP ODATA Request: ' + JSON.stringify(requestOptions, null, 2))
+            const until = Date.now() + (this.caps.COGNIGY_NLP_ANALYTICS_WAIT || 5000)
+            while (true) {
+              if (until < Date.now()) break
+              await _sleep(this.caps.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL || Defaults.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL)
 
-              const until = Date.now() + (this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_WAIT] || 5000)
-              while (true) {
-                if (until < Date.now()) break
-
-                await sleep(1000)
-
-                const dataRaw = await request(requestOptions)
-                debug('NLP ODATA Response: ' + JSON.stringify(dataRaw, null, 2))
-                try {
-                  const data = JSON.parse(dataRaw)
-                  botMsg.nlp = {
-                    intent: this._extractIntent(data)
+              let nlpQueryResult = null
+              try {
+                const nlpRequestOptions = {
+                  method: 'GET',
+                  url: isV20 ? `${this.caps.COGNIGY_NLP_ANALYTICS_ODATA_URL}/Inputs/` : `${this.caps.COGNIGY_NLP_ANALYTICS_ODATA_URL}/Records/`,
+                  qs: {
+                    $select: 'intent,intentScore,timestamp',
+                    $top: 100000,
+                    $orderby: 'timestamp desc',
+                    $filter: `sessionId eq '${sessionId}' or sessionId eq '${Date.now()}'`,
+                    apikey: this.caps.COGNIGY_NLP_ANALYTICS_ODATA_APIKEY
                   }
-                  if (botMsg.nlp.intent.name) break
-                } catch (jsonParseErr) {}
+                }
+                botMsg.sourceData.nlpRequestOptions = nlpRequestOptions
+                debug('NLP ODATA Request: ' + JSON.stringify(nlpRequestOptions, null, 2))
+
+                const dataRaw = await request(nlpRequestOptions)
+                debug('NLP ODATA Response: ' + JSON.stringify(dataRaw, null, 2))
+                nlpQueryResult = JSON.parse(dataRaw)
+                botMsg.sourceData.nlpResponse = nlpQueryResult
+              } catch (err) {
+                debug(`NLP ODATA Response err: ${err.message}`)
               }
-            } catch (err) {
-              debug(`Cannot process nlp data: ${err.message}`)
+              if (nlpQueryResult && nlpQueryResult.value && nlpQueryResult.value.length > 0) {
+                if (nlpQueryResult.value[0].intent && nlpQueryResult.value[0].intent.length > 0) {
+                  botMsg.nlp = {
+                    intent: {
+                      name: nlpQueryResult.value[0].intent,
+                      confidence: nlpQueryResult.value[0].intentScore
+                    }
+                  }
+                }
+                break
+              }
             }
           }
 
@@ -182,16 +191,6 @@ class BotiumConnectorCognigy {
 
   Clean () {
     return this.delegateContainer.Clean()
-  }
-
-  _extractIntent (queryResult) {
-    if (queryResult.value && queryResult.value.length > 0 && queryResult.value[0].intent !== '') {
-      return {
-        name: queryResult.value[0].intent,
-        confidence: queryResult.value[0].intentScore
-      }
-    }
-    return {}
   }
 }
 
