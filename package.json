@@ -9,8 +9,8 @@
   },
   "scripts": {
     "build": "npm run eslint && rollup -c && cp logo.png dist",
-    "eslint": "eslint index.js",
-    "eslint-fix": "eslint --fix index.js"
+    "eslint": "eslint index.js bin/**/*.js src/**/*.js",
+    "eslint-fix": "eslint --fix index.js bin/**/*.js src/**/*.js"
   },
   "author": "Botium GmbH",
   "license": "MIT",

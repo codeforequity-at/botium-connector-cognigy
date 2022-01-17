@@ -19,7 +19,7 @@ const Capabilities = {
 }
 
 const Defaults = {
-  [Capabilities.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL]: 5000
+  [Capabilities.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL]: 1000
 }
 
 const _sleep = async ms => {
@@ -34,6 +34,7 @@ class BotiumConnectorCognigy {
     this.caps = caps
     this.delegateContainer = null
     this.delegateCaps = null
+    this.nlpSessionIdCache = {}
   }
 
   async Validate () {
@@ -59,47 +60,55 @@ class BotiumConnectorCognigy {
           const sessionId = botMsg.sourceData.sessionId
 
           if (sessionId && this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ENABLE]) {
-            const isV20 = `${this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ODATA_URL]}`.indexOf('v2.0') > 0
+            if (!_.has(this.nlpSessionIdCache, sessionId)) {
+              const isV20 = `${this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ODATA_URL]}`.indexOf('v2.0') > 0
 
-            const until = Date.now() + (this.caps.COGNIGY_NLP_ANALYTICS_WAIT || 5000)
-            while (true) {
-              if (until < Date.now()) break
-              await _sleep(this.caps.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL || Defaults.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL)
+              const maxIterations = Math.ceil((this.caps.COGNIGY_NLP_ANALYTICS_WAIT || 5000) / (this.caps.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL || Defaults.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL))
+              for (let iteration = 0; iteration < maxIterations; iteration++) {
+                await _sleep(this.caps.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL || Defaults.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL)
 
-              let nlpQueryResult = null
-              try {
-                const nlpRequestOptions = {
-                  method: 'GET',
-                  url: isV20 ? `${this.caps.COGNIGY_NLP_ANALYTICS_ODATA_URL}/Inputs/` : `${this.caps.COGNIGY_NLP_ANALYTICS_ODATA_URL}/Records/`,
-                  qs: {
-                    $select: 'intent,intentScore,timestamp',
-                    $top: 100000,
-                    $orderby: 'timestamp desc',
-                    $filter: `sessionId eq '${sessionId}' or sessionId eq '${Date.now()}'`,
-                    apikey: this.caps.COGNIGY_NLP_ANALYTICS_ODATA_APIKEY
-                  }
-                }
-                botMsg.sourceData.nlpRequestOptions = nlpRequestOptions
-                debug('NLP ODATA Request: ' + JSON.stringify(nlpRequestOptions, null, 2))
-
-                const dataRaw = await request(nlpRequestOptions)
-                debug('NLP ODATA Response: ' + JSON.stringify(dataRaw, null, 2))
-                nlpQueryResult = JSON.parse(dataRaw)
-                botMsg.sourceData.nlpResponse = nlpQueryResult
-              } catch (err) {
-                debug(`NLP ODATA Response err: ${err.message}`)
-              }
-              if (nlpQueryResult && nlpQueryResult.value && nlpQueryResult.value.length > 0) {
-                if (nlpQueryResult.value[0].intent && nlpQueryResult.value[0].intent.length > 0) {
-                  botMsg.nlp = {
-                    intent: {
-                      name: nlpQueryResult.value[0].intent,
-                      confidence: nlpQueryResult.value[0].intentScore
+                let nlpQueryResult = null
+                try {
+                  const nlpRequestOptions = {
+                    method: 'GET',
+                    url: isV20 ? `${this.caps.COGNIGY_NLP_ANALYTICS_ODATA_URL}/Inputs/` : `${this.caps.COGNIGY_NLP_ANALYTICS_ODATA_URL}/Records/`,
+                    qs: {
+                      $select: 'intent,intentScore,timestamp',
+                      $top: 100000,
+                      $orderby: 'timestamp desc',
+                      $filter: `sessionId eq '${sessionId}' or sessionId eq '${Date.now()}'`,
+                      apikey: this.caps.COGNIGY_NLP_ANALYTICS_ODATA_APIKEY
                     }
                   }
+                  botMsg.sourceData.nlpRequestOptions = nlpRequestOptions
+                  debug(`NLP ODATA Request ${iteration + 1}/${maxIterations}: ${JSON.stringify(nlpRequestOptions, null, 2)}`)
+
+                  const dataRaw = await request(nlpRequestOptions)
+                  debug(`NLP ODATA Response ${iteration + 1}/${maxIterations}: ${dataRaw}`)
+                  nlpQueryResult = JSON.parse(dataRaw)
+                  botMsg.sourceData.nlpResponse = nlpQueryResult
+                } catch (err) {
+                  debug(`NLP ODATA Response ${iteration + 1}/${maxIterations} ignored, JSON parse err: ${err.message}`)
+                  continue
                 }
-                break
+                if (nlpQueryResult && nlpQueryResult.value && nlpQueryResult.value.length > 0) {
+                  if (nlpQueryResult.value[0].intent && nlpQueryResult.value[0].intent.length > 0) {
+                    this.nlpSessionIdCache[sessionId] = {
+                      intent: {
+                        name: nlpQueryResult.value[0].intent,
+                        confidence: nlpQueryResult.value[0].intentScore
+                      }
+                    }
+                  }
+                  break
+                }
               }
+              if (!this.nlpSessionIdCache[sessionId]) {
+                this.nlpSessionIdCache[sessionId] = null
+              }
+            }
+            if (this.nlpSessionIdCache[sessionId]) {
+              botMsg.nlp = _.cloneDeep(this.nlpSessionIdCache[sessionId])
             }
           }
 
@@ -178,6 +187,7 @@ class BotiumConnectorCognigy {
   }
 
   Start () {
+    this.nlpSessionIdCache = {}
     return this.delegateContainer.Start()
   }
 
@@ -186,6 +196,7 @@ class BotiumConnectorCognigy {
   }
 
   Stop () {
+    this.nlpSessionIdCache = {}
     return this.delegateContainer.Stop()
   }
 
