@@ -201,22 +201,3 @@ module.exports = {
     }
   }
 }
-
-const caps = {
-  "botium": {
-    "Capabilities": {
-      "CONTAINERMODE": "cognigy",
-      "COGNIGY_URL": "https://endpoint-eon.cognigy.cloud/29e07336e0a7dac6e91129c0779d73a76fb752a5941fa632a44bb32de5c8132d",
-      "COGNIGY_NLP_ANALYTICS_ENABLE": true,
-      "COGNIGY_NLP_ANALYTICS_ODATA_APIKEY": "dd10e5ef8223d274ebeae3eac39d2722695e6034a4798b42d8a77b94c7b8dc2c050676dcf9e0e7bd07de2c6f3b82ef0ac35a495c05f173b37fe25d790fb5c330",
-      "COGNIGY_NLP_ANALYTICS_ODATA_URL": "https://odata-eon.cognigy.cloud/",
-      "COGNIGY_API_URL": "https://api-eon.cognigy.cloud",
-      "COGNIGY_API_APIKEY": "dd10e5ef8223d274ebeae3eac39d2722695e6034a4798b42d8a77b94c7b8dc2c050676dcf9e0e7bd07de2c6f3b82ef0ac35a495c05f173b37fe25d790fb5c330   "
-    },
-    "Sources": {},
-    "Envs": {}
-  }
-}
-importCognigyIntents({caps: caps.botium.Capabilities}, {}).then(res => // TODO
-  console.log(`res ===> ${JSON.stringify(res)}`)
-)
