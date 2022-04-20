@@ -112,6 +112,8 @@ class BotiumConnectorCognigy {
             }
           }
 
+          console.log(JSON.stringify(botMsgRoot))
+
           const botMsgs = []
           let qrsText = _.get(botMsgRoot, 'data._data._cognigy._default._quickReplies.text')
           if (_.isNil(qrsText)) {
@@ -131,7 +133,7 @@ class BotiumConnectorCognigy {
           // Or multi channel responses are possible?
           const qrs = _.get(botMsgRoot, 'data._data._cognigy._default._quickReplies.quickReplies')
           if (qrs) {
-            botMsg.buttons = qrs.map(qr => ({
+            botMsg.buttons = qrs.filter(qr => qr.payload).map(qr => ({
               text: qr.title,
               payload: qr.payload,
               imageUri: qr.image_url
@@ -141,10 +143,11 @@ class BotiumConnectorCognigy {
           const buttons =
             _.get(botMsgRoot, 'data._data._cognigy._default._buttons.buttons')
           if (buttons) {
-            botMsg.buttons = buttons.map(qr => ({
+            const buttonsTransformed = buttons.filter(qr => qr.payload || qr.url || qr.intentName).map(qr => ({
               text: qr.title,
               payload: qr.payload || qr.url || qr.intentName
             }))
+            buttonsTransformed.forEach(b => botMsg.buttons.push(b))
           }
 
           const media =
