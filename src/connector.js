@@ -112,8 +112,6 @@ class BotiumConnectorCognigy {
             }
           }
 
-          console.log(JSON.stringify(botMsgRoot))
-
           const botMsgs = []
           let qrsText = _.get(botMsgRoot, 'data._data._cognigy._default._quickReplies.text')
           if (_.isNil(qrsText)) {
