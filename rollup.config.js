@@ -18,7 +18,8 @@ export default {
   ],
   plugins: [
     commonjs({
-      exclude: 'node_modules/**'
+      exclude: 'node_modules/**',
+      ignore: ['@cognigy/rest-api-client']
     }),
     babel({
       exclude: 'node_modules/**',
