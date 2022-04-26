@@ -79,16 +79,11 @@ const importCognigyIntents = async ({ caps, buildconvos }, { statusCallback }) =
 
   status(`Identified main flow "${endpointFlowDetails.name}" for Cognigy Rest Endpoint "${endpointDetails.name}"`)
 
-  const projectFlows = await _retrieveAll(client.indexFlows.bind(client), { projectId: endpointFlowDetails.projectReference })
-
   const allIntents = []
 
-  for (const projectFlow of projectFlows) {
-    const flowDetails = await client.readFlow({ flowId: projectFlow._id })
-    const exportedIntents = await client.exportIntents({ flowId: flowDetails._id, localeId: flowDetails.localeReference, format: 'json' })
-    status(`Downloaded ${exportedIntents.length} intent(s) for flow "${flowDetails.name}": ${exportedIntents.map(i => i.name).join(',')}`)
-    allIntents.push(...exportedIntents)
-  }
+  const exportedIntents = await client.exportIntents({ flowId: endpointFlowDetails._id, localeId: endpointFlowDetails.localeReference, format: 'json' })
+  status(`Downloaded ${exportedIntents.length} intent(s) for flow "${endpointFlowDetails.name}": ${exportedIntents.map(i => i.name + (i.isDisabled ? '(disabled)' : '')).join(',')}`)
+  allIntents.push(...exportedIntents.filter(i => !i.isDisabled))
 
   const convos = []
   const utterances = []
