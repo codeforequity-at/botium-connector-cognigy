@@ -71,19 +71,47 @@ const importCognigyIntents = async ({ caps, buildconvos }, { statusCallback }) =
   const endpointDetails = await client.readEndpoint({ endpointId: endpoint._id })
   if (!endpointDetails) throw new Error(`Endpoint details for URL ${container.pluginInstance.caps.COGNIGY_URL} not found`)
 
+  const allLocales = await _retrieveAll(client.indexLocales.bind(client))
+  const locale = allLocales.find(l => l.referenceId === endpointDetails.localeId)
+  if (!locale) throw new Error(`Locale for URL ${container.pluginInstance.caps.COGNIGY_URL} not found`)
+
   const allFlows = await _retrieveAll(client.indexFlows.bind(client))
   const endpointFlow = allFlows.find(f => f.referenceId === endpointDetails.flowId)
   if (!endpointFlow) throw new Error(`Endpoint flow for URL ${container.pluginInstance.caps.COGNIGY_URL} not found`)
   const endpointFlowDetails = await client.readFlow({ flowId: endpointFlow._id })
   if (!endpointFlowDetails) throw new Error(`Endpoint flow details for URL ${container.pluginInstance.caps.COGNIGY_URL} not found`)
+  for (const endpoint of endpoints) {
+    const endpointDetails = await client.readEndpoint({ endpointId: endpoint._id })
+    const endpointFlow = allFlows.find(f => f.referenceId === endpointDetails.flowId)
+    const locale = allLocales.find(l => l.referenceId === endpointDetails.localeId)
+    status(`Identified endpoint "${endpointDetails.URLToken}" (${endpointDetails.name}) assigned to flow "${endpointFlow ? endpointFlow._id : 'N/A'}" (${endpointFlow ? endpointFlow.name : 'N/A'}) and locale "${locale ? locale._id : 'N/A'}" (${locale ? locale.name : 'N/A'}) using channel "${endpointDetails.channel}"`)
+  }
+  status(`Identified entry endpoint "${endpointDetails.URLToken}" (${endpointDetails.name}) assigned to flow "${endpointFlow ? endpointFlow._id : 'N/A'}" (${endpointFlow ? endpointFlow.name : 'N/A'}) and locale "${locale ? locale._id : 'N/A'}" (${locale ? locale.name : 'N/A'}) using channel "${endpointDetails.channel}"`)
 
-  status(`Identified main flow "${endpointFlowDetails.name}" for Cognigy Rest Endpoint "${endpointDetails.name}"`)
+  const mainFlowLocale = allLocales.find(l => l._id === endpointFlowDetails.localeReference)
+  status(`Identified main flow "${endpointFlowDetails.name}" (${endpointFlow._id}) using locale "${mainFlowLocale ? mainFlowLocale._id : 'N/A'}" (${mainFlowLocale ? mainFlowLocale.name : 'N/A'}) for Cognigy Rest Endpoint "${endpointDetails.name}" (${container.pluginInstance.caps.COGNIGY_URL})`)
+
+  const flows = [endpointFlow]
+  for (const flowId of endpointFlowDetails.attachedFlows) {
+    flows.push(await client.readFlow({ flowId }))
+  }
+  status(`Identified attached flows "${(endpointFlowDetails.attachedFlows && endpointFlowDetails.attachedFlows.length > 0) ? endpointFlowDetails.attachedFlows.join(',') : 'N/A'}" for Cognigy Rest Endpoint "${endpointDetails.name}"`)
 
   const allIntents = []
 
-  const exportedIntents = await client.exportIntents({ flowId: endpointFlowDetails._id, localeId: endpointFlowDetails.localeReference, format: 'json' })
-  status(`Downloaded ${exportedIntents.length} intent(s) for flow "${endpointFlowDetails.name}": ${exportedIntents.map(i => i.name + (i.isDisabled ? '(disabled)' : '')).join(',')}`)
-  allIntents.push(...exportedIntents.filter(i => !i.isDisabled))
+  for (const projectFlow of flows) {
+    const flowDetails = await client.readFlow({ flowId: projectFlow._id })
+    const exportedIntents = await client.exportIntents({ flowId: flowDetails._id, localeId: locale._id, format: 'json' })
+    if (exportedIntents && exportedIntents.length > 0) {
+      status(`Downloaded ${exportedIntents.length} intent(s) (${exportedIntents.map(i => i.name).join(', ')}) for flow "${flowDetails.name}" (${flowDetails._id}) using locale "${flowDetails.localeReference}"`)
+      const disabledIntents = exportedIntents.filter(i => i.isDisabled)
+      if (disabledIntents.length > 0) {
+        status(`Identified disabled intents "${disabledIntents.map(i => i.name).join(', ')}" in flow "${flowDetails.name}" (${flowDetails._id}) using locale "${flowDetails.localeReference}"`)
+      }
+      allIntents.push(...exportedIntents.filter(i => !i.isDisabled))
+    }
+  }
+  status(`Downloaded ${allIntents.length} intent(s) for Cognigy Rest Endpoint "${endpointDetails.name}"`)
 
   const convos = []
   const utterances = []
