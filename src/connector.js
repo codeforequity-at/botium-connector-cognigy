@@ -61,7 +61,6 @@ class BotiumConnectorCognigy {
 
           if (sessionId && this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ENABLE]) {
             if (!_.has(this.nlpSessionIdCache, sessionId)) {
-              //const isV20 = `${this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ODATA_URL]}`.indexOf('v2.0') > 0
               const odataURL = this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ODATA_URL]
               let version = odataURL.indexOf('/v') > 0 && parseFloat(odataURL.substring(odataURL.indexOf('/v') + 2))
               const urlHasVersion = !!version
