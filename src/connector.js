@@ -61,8 +61,15 @@ class BotiumConnectorCognigy {
 
           if (sessionId && this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ENABLE]) {
             if (!_.has(this.nlpSessionIdCache, sessionId)) {
-              const isV20 = `${this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ODATA_URL]}`.indexOf('v2.0') > 0
-
+              //const isV20 = `${this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ODATA_URL]}`.indexOf('v2.0') > 0
+              const odataURL = this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ODATA_URL]
+              let version = odataURL.indexOf('/v') > 0 && parseFloat(odataURL.substring(odataURL.indexOf('/v') + 2))
+              const urlHasVersion = !!version
+              // if version is not set in the url, then use the latest
+              const LATEST = 2.3
+              version = urlHasVersion ? version : LATEST
+              const base = urlHasVersion ? odataURL.substring(0, odataURL.indexOf('/v')) : odataURL
+              const url = `${base}/v${version}/${version === 2.3 ? 'Analytics' : version < 2 ? 'Records' : 'Inputs'}/`
               const maxIterations = Math.ceil((this.caps.COGNIGY_NLP_ANALYTICS_WAIT || 5000) / (this.caps.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL || Defaults.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL))
               for (let iteration = 0; iteration < maxIterations; iteration++) {
                 await _sleep(this.caps.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL || Defaults.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL)
@@ -71,7 +78,7 @@ class BotiumConnectorCognigy {
                 try {
                   const nlpRequestOptions = {
                     method: 'GET',
-                    url: isV20 ? `${this.caps.COGNIGY_NLP_ANALYTICS_ODATA_URL}/Inputs/` : `${this.caps.COGNIGY_NLP_ANALYTICS_ODATA_URL}/Records/`,
+                    url: url,
                     qs: {
                       $select: 'intent,intentScore,timestamp',
                       $top: 100000,
