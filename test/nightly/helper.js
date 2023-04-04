@@ -8,7 +8,7 @@ module.exports.readCaps = () => {
   const caps = botiumJson?.botium.Capabilities || {}
   Object.keys(process.env).filter(e => e.startsWith('BOTIUM_')).forEach((element) => {
     const elementToMerge = element.replace(/^BOTIUM_/, '')
-    this.caps[elementToMerge] = process.env[element]
+    caps[elementToMerge] = process.env[element]
   })
 
   return caps
