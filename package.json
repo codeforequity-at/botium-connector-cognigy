@@ -43,6 +43,7 @@
   "dependencies": {
     "@babel/runtime": "^7.6.2",
     "@cognigy/rest-api-client": "^0.11.0",
+    "@cognigy/socket-client": "^4.7.0",
     "debug": "^4.1.1",
     "lodash": "^4.17.15",
     "mime-types": "^2.1.24",
