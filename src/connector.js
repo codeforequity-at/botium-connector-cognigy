@@ -73,7 +73,7 @@ class BotiumConnectorCognigy {
             this._extractBotText(botMsg, botMsgRoot)
             this._extractBotButtons(botMsg, botMsgRoot)
             this._extractBotMedia(botMsg, botMsgRoot)
-            this._extractBotQuickreplies(botMsg, botMsgRoot)
+            this._extractBotQuickReplies(botMsg, botMsgRoot)
             this._extractBotGalleryItems(botMsg, botMsgRoot)
           }
         }
@@ -81,6 +81,8 @@ class BotiumConnectorCognigy {
         this.delegateCaps = Object.assign({}, this.caps, this.delegateCaps)
         this.delegateContainer = new SimpleRestContainer({ queueBotSays: this.queueBotSays, caps: this.delegateCaps })
       }
+      debug('Validate delegate')
+      return this.delegateContainer.Validate()
     }
   }
 
