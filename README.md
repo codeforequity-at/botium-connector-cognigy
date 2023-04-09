@@ -110,8 +110,13 @@ Botium setup is ready, you can begin to write your [BotiumScript](https://github
 
 Set the capability __CONTAINERMODE__ to __cognigy__ to activate this connector.
 
+### COGNIGY_ENDPOINT_TYPE
+Can be 'REST' or 'SOCKETIO'
+
+Default: 'REST'
+
 ### COGNIGY_URL
-Cognigy REST Endpoint URL
+Cognigy Endpoint URL
 
 ### COGNIGY_USER_ID
 User id

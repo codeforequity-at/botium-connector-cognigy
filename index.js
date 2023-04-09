@@ -17,9 +17,19 @@ module.exports = {
     provider: 'Cognigy AI',
     capabilities: [
       {
+        name: 'COGNIGY_ENDPOINT_TYPE',
+        label: 'Endpoint Type',
+        type: 'choice',
+        choices: [
+          { name: 'REST', key: 'REST' },
+          { name: 'SocketIO', key: 'SOCKETIO' }
+        ],
+        required: true
+      },
+      {
         name: 'COGNIGY_URL',
-        label: 'REST Endpoint',
-        description: 'REST Endpoint URL, something like "https://endpoint-xxx.cognigy.ai/xxxxxxxxxxxxxxxxxxxxxxxxxxxx"',
+        label: 'Endpoint Url',
+        description: 'Endpoint URL, something like "https://endpoint-xxx.cognigy.ai/xxxxxxxxxxxxxxxxxxxxxxxxxxxx"',
         type: 'url',
         required: true
       },
