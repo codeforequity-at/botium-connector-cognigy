@@ -3,6 +3,7 @@ const _ = require('lodash')
 const debug = require('debug')('botium-connector-cognigy')
 const request = require('request-promise-native')
 const { URL } = require('url')
+const { v4: uuidv4 } = require('uuid')
 
 const SimpleRestContainer = require('botium-core/src/containers/plugins/SimpleRestContainer')
 const CoreCapabilities = require('botium-core/src/Capabilities')
@@ -49,7 +50,7 @@ class BotiumConnectorCognigy {
   async Validate () {
     debug('Validate called')
 
-    Object.assign(this.caps, Defaults)
+    Object.assign(Defaults, this.caps)
 
     if (!this.caps[Capabilities.COGNIGY_ENDPOINT_TYPE]) throw new Error('COGNIGY_ENDPOINT_TYPE capability required')
     if (!this.caps[Capabilities.COGNIGY_URL]) throw new Error('COGNIGY_URL capability required')
@@ -93,14 +94,16 @@ class BotiumConnectorCognigy {
   }
 
   async Start () {
+    this.nlpSessionIdCache = {}
     if (this.caps[Capabilities.COGNIGY_ENDPOINT_TYPE] !== 'SOCKETIO') {
-      this.nlpSessionIdCache = {}
       return this.delegateContainer.Start()
     } else {
+      this.sessionId = uuidv4()
       const cognigyUrl = new URL(this.caps[Capabilities.COGNIGY_URL])
       this.wsClient = new SocketClient(cognigyUrl.origin, cognigyUrl.pathname.replace('/', ''), {
         forceWebsockets: true,
-        userId: this.caps[Capabilities.COGNIGY_USER_ID]
+        userId: this.caps[Capabilities.COGNIGY_USER_ID],
+        sessionId: this.sessionId
       })
 
       this.wsClient.on('output', async (botMsgRoot) => {
@@ -146,6 +149,12 @@ class BotiumConnectorCognigy {
     this.nlpSessionIdCache = {}
     if (this.caps[Capabilities.COGNIGY_ENDPOINT_TYPE] !== 'SOCKETIO') {
       return this.delegateContainer.Stop()
+    } else {
+      this.sessionId = null
+      if (this.wsClient) {
+        this.wsClient.disconnect()
+        this.wsClient = null
+      }
     }
   }
 
@@ -228,7 +237,7 @@ class BotiumConnectorCognigy {
   }
 
   async _extractNlp (botMsg) {
-    const sessionId = botMsg.sourceData.sessionId || botMsg.sourceData.traceId
+    const sessionId = botMsg.sourceData.sessionId || this.sessionId
     if (sessionId && this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ENABLE]) {
       if (!_.has(this.nlpSessionIdCache, sessionId)) {
         const odataURL = this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ODATA_URL]

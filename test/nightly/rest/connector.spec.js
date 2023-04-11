@@ -1,7 +1,8 @@
 require('dotenv').config()
 const assert = require('chai').assert
-const BotiumConnectorCognigy = require('../../src/connector')
-const { readCaps } = require('./helper')
+const BotiumConnectorCognigy = require('../../../src/connector')
+const { readCaps } = require('../helper')
+const EventEmitter = require('events')
 
 describe('connector', function () {
   beforeEach(async function () {
@@ -12,7 +13,11 @@ describe('connector', function () {
     const queueBotSays = (botMsg) => {
       this.botMsgPromiseResolve(botMsg)
     }
-    this.connector = new BotiumConnectorCognigy({ queueBotSays, caps: this.caps })
+    const setAsync = (isAsync) => {
+      this.caps.RETRY_CONVO_ASYNC = isAsync
+    }
+    const eventEmitter = new EventEmitter()
+    this.connector = new BotiumConnectorCognigy({ queueBotSays, caps: this.caps, setAsync, eventEmitter })
     await this.connector.Validate()
     await this.connector.Start()
   })

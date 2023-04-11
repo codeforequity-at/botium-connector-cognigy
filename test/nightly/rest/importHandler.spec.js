@@ -1,7 +1,7 @@
 require('dotenv').config()
 const assert = require('chai').assert
-const { importHandler } = require('../../src/intents')
-const { readCaps } = require('./helper')
+const { importHandler } = require('../../../src/intents')
+const { readCaps } = require('../helper')
 
 describe('importhandler', function () {
   beforeEach(async function () {

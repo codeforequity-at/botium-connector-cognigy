@@ -12,7 +12,8 @@
     "eslint": "eslint index.js bin/**/*.js src/**/*.js",
     "eslint-fix": "eslint --fix index.js bin/**/*.js src/**/*.js",
     "test": "echo Just placeholder, no tests here yet",
-    "test-nightly": "mocha test/nightly/**/*spec.js"
+    "test-nightly-rest": "mocha test/nightly/rest/**/*spec.js",
+    "test-nightly-socketio": "mocha test/nightly/socketio/**/*spec.js"
   },
   "author": "Botium GmbH",
   "license": "MIT",
