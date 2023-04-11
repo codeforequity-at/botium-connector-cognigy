@@ -50,7 +50,7 @@ class BotiumConnectorCognigy {
   async Validate () {
     debug('Validate called')
 
-    Object.assign(Defaults, this.caps)
+    this.caps = Object.assign({}, Defaults, this.caps)
 
     if (!this.caps[Capabilities.COGNIGY_ENDPOINT_TYPE]) throw new Error('COGNIGY_ENDPOINT_TYPE capability required')
     if (!this.caps[Capabilities.COGNIGY_URL]) throw new Error('COGNIGY_URL capability required')
