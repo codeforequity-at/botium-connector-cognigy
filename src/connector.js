@@ -117,7 +117,9 @@ class BotiumConnectorCognigy {
         this._extractBotMedia(botMsg, botMsgRoot)
         this._extractBotQuickReplies(botMsg, botMsgRoot)
         this._extractBotGalleryItems(botMsg, botMsgRoot)
-        this._sendBotMsg(botMsg)
+        if (Object.keys(botMsg).length > 2) {
+          this._sendBotMsg(botMsg)
+        }
       })
 
       this.wsClient.on('error', async (err) => {
@@ -177,7 +179,9 @@ class BotiumConnectorCognigy {
       botMsgs.push(_.get(botMsgRoot, 'text'))
     }
 
-    botMsg.messageText = [...new Set(botMsgs)].join(' ')
+    if (botMsgs.length === 1 && !_.isNil(botMsgs[0])) {
+      botMsg.messageText = [...new Set(botMsgs)].join(' ')
+    }
   }
 
   _extractBotMedia (botMsg, botMsgRoot) {
