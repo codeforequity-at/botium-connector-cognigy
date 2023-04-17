@@ -52,6 +52,7 @@ class BotiumConnectorCognigy {
 
     this.caps = Object.assign({}, Defaults, this.caps)
 
+    if (this.caps[Capabilities.COGNIGY_USER_ID] === '') this.caps[Capabilities.COGNIGY_USER_ID] = undefined
     if (!this.caps[Capabilities.COGNIGY_ENDPOINT_TYPE]) throw new Error('COGNIGY_ENDPOINT_TYPE capability required')
     if (!this.caps[Capabilities.COGNIGY_URL]) throw new Error('COGNIGY_URL capability required')
     if (this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ENABLE] && !this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ODATA_URL]) throw new Error('COGNIGY_NLP_ANALYTICS_ODATA_URL capability required (if NLP analytics enabled)')
