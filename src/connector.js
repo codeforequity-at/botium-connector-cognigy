@@ -77,6 +77,7 @@ class BotiumConnectorCognigy {
             this._extractBotMedia(botMsg, botMsgRoot)
             this._extractBotQuickReplies(botMsg, botMsgRoot)
             this._extractBotGalleryItems(botMsg, botMsgRoot)
+            this.prevTimestamp = new Date().toISOString()
           }
         }
         debug(`Validate delegateCaps ${util.inspect(this.delegateCaps)}`)
