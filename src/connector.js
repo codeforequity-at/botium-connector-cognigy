@@ -34,7 +34,7 @@ const _sleep = async ms => {
 }
 
 class BotiumConnectorCognigy {
-  constructor ({ queueBotSays, caps, setAsync, eventEmitter }) {
+  constructor ({ queueBotSays, caps, eventEmitter }) {
     this.queueBotSays = queueBotSays
     this.caps = caps
     this.delegateContainer = null
@@ -42,9 +42,6 @@ class BotiumConnectorCognigy {
     this.nlpSessionIdCache = {}
     this.wsClient = null
     this.eventEmitter = eventEmitter
-    if (this.caps[Capabilities.COGNIGY_ENDPOINT_TYPE] === 'SOCKETIO') {
-      setAsync(true)
-    }
   }
 
   async Validate () {
@@ -129,10 +126,6 @@ class BotiumConnectorCognigy {
 
       try {
         this.wsClient.connect()
-        this.eventEmitter.on('RETRY_CONVO_ASYNC_RETRIED', () => {
-          debug('Retry event received')
-          this.wsClient.disconnect()
-        })
       } catch (err) {
         return Promise.reject(new Error(`Error connecting to Cognigy: ${err.message}`))
       }

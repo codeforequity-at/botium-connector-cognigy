@@ -13,11 +13,8 @@ describe('connector', function () {
     const queueBotSays = (botMsg) => {
       this.botMsgPromiseResolve(botMsg)
     }
-    const setAsync = (isAsync) => {
-      this.caps.RETRY_CONVO_ASYNC = isAsync
-    }
     const eventEmitter = new EventEmitter()
-    this.connector = new BotiumConnectorCognigy({ queueBotSays, caps: this.caps, setAsync, eventEmitter })
+    this.connector = new BotiumConnectorCognigy({ queueBotSays, caps: this.caps, eventEmitter })
     await this.connector.Validate()
     await this.connector.Start()
   })
