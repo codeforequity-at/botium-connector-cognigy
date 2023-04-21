@@ -74,6 +74,7 @@ class BotiumConnectorCognigy {
             this._extractBotMedia(botMsg, botMsgRoot)
             this._extractBotQuickReplies(botMsg, botMsgRoot)
             this._extractBotGalleryItems(botMsg, botMsgRoot)
+            this.prevTimestamp = new Date().toISOString()
           }
         }
         debug(`Validate delegateCaps ${util.inspect(this.delegateCaps)}`)
@@ -92,7 +93,7 @@ class BotiumConnectorCognigy {
   }
 
   async Start () {
-    this.nlpSessionIdCache = {}
+    this.prevTimestamp = new Date().toISOString()
     if (this.caps[Capabilities.COGNIGY_ENDPOINT_TYPE] !== 'SOCKETIO') {
       return this.delegateContainer.Start()
     } else {
@@ -118,6 +119,7 @@ class BotiumConnectorCognigy {
         if (Object.keys(botMsg).length > 2) {
           this._sendBotMsg(botMsg)
         }
+        this.prevTimestamp = new Date().toISOString()
       })
 
       this.wsClient.on('error', async (err) => {
@@ -142,7 +144,6 @@ class BotiumConnectorCognigy {
   }
 
   Stop () {
-    this.nlpSessionIdCache = {}
     if (this.caps[Capabilities.COGNIGY_ENDPOINT_TYPE] !== 'SOCKETIO') {
       return this.delegateContainer.Stop()
     } else {
@@ -237,61 +238,53 @@ class BotiumConnectorCognigy {
   async _extractNlp (botMsg) {
     const sessionId = botMsg.sourceData.sessionId || this.sessionId
     if (sessionId && this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ENABLE]) {
-      if (!_.has(this.nlpSessionIdCache, sessionId)) {
-        const odataURL = this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ODATA_URL]
-        let version = odataURL.indexOf('/v') > 0 && parseFloat(odataURL.substring(odataURL.indexOf('/v') + 2))
-        const urlHasVersion = !!version
-        // if version is not set in the url, then use the latest
-        const LATEST = 2.3
-        version = urlHasVersion ? version : LATEST
-        const base = urlHasVersion ? odataURL.substring(0, odataURL.indexOf('/v')) : odataURL
-        const url = `${base}/v${version}/${version === 2.3 ? 'Analytics' : version < 2 ? 'Records' : 'Inputs'}/`
-        const maxIterations = Math.ceil((this.caps.COGNIGY_NLP_ANALYTICS_WAIT || 5000) / (this.caps.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL || Defaults.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL))
-        for (let iteration = 0; iteration < maxIterations; iteration++) {
-          await _sleep(this.caps.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL || Defaults.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL)
+      const odataURL = this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ODATA_URL]
+      let version = odataURL.indexOf('/v') > 0 && parseFloat(odataURL.substring(odataURL.indexOf('/v') + 2))
+      const urlHasVersion = !!version
+      // if version is not set in the url, then use the latest
+      const LATEST = 2.3
+      version = urlHasVersion ? version : LATEST
+      const base = urlHasVersion ? odataURL.substring(0, odataURL.indexOf('/v')) : odataURL
+      const url = `${base}/v${version}/${version === 2.3 ? 'Analytics' : version < 2 ? 'Records' : 'Inputs'}/`
+      const maxIterations = Math.ceil((this.caps.COGNIGY_NLP_ANALYTICS_WAIT || 5000) / (this.caps.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL || Defaults.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL))
+      for (let iteration = 0; iteration < maxIterations; iteration++) {
+        await _sleep(this.caps.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL || Defaults.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL)
 
-          let nlpQueryResult = null
-          try {
-            const nlpRequestOptions = {
-              method: 'GET',
-              url: url,
-              qs: {
-                $select: 'intent,intentScore,timestamp',
-                $top: 100000,
-                $orderby: 'timestamp desc',
-                $filter: `sessionId eq '${sessionId}' or sessionId eq '${Date.now()}'`,
-                apikey: this.caps.COGNIGY_NLP_ANALYTICS_ODATA_APIKEY
+        let nlpQueryResult = null
+        try {
+          const nlpRequestOptions = {
+            method: 'GET',
+            url: url,
+            qs: {
+              $select: 'intent,intentScore,timestamp',
+              $top: 100000,
+              $orderby: 'timestamp desc',
+              $filter: `sessionId eq '${sessionId}' and timestamp gt '${this.prevTimestamp}'`,
+              apikey: this.caps.COGNIGY_NLP_ANALYTICS_ODATA_APIKEY
+            }
+          }
+          botMsg.sourceData.nlpRequestOptions = nlpRequestOptions
+          debug(`NLP ODATA Request ${iteration + 1}/${maxIterations}: ${JSON.stringify(nlpRequestOptions, null, 2)}`)
+
+          const dataRaw = await request(nlpRequestOptions)
+          debug(`NLP ODATA Response ${iteration + 1}/${maxIterations}: ${dataRaw}`)
+          nlpQueryResult = JSON.parse(dataRaw)
+          botMsg.sourceData.nlpResponse = nlpQueryResult
+        } catch (err) {
+          debug(`NLP ODATA Response ${iteration + 1}/${maxIterations} ignored, JSON parse err: ${err.message}`)
+          continue
+        }
+        if (nlpQueryResult && nlpQueryResult.value && nlpQueryResult.value.length > 0) {
+          if (nlpQueryResult.value[0].intent && nlpQueryResult.value[0].intent.length > 0) {
+            botMsg.nlp = {
+              intent: {
+                name: nlpQueryResult.value[0].intent,
+                confidence: nlpQueryResult.value[0].intentScore
               }
             }
-            botMsg.sourceData.nlpRequestOptions = nlpRequestOptions
-            debug(`NLP ODATA Request ${iteration + 1}/${maxIterations}: ${JSON.stringify(nlpRequestOptions, null, 2)}`)
-
-            const dataRaw = await request(nlpRequestOptions)
-            debug(`NLP ODATA Response ${iteration + 1}/${maxIterations}: ${dataRaw}`)
-            nlpQueryResult = JSON.parse(dataRaw)
-            botMsg.sourceData.nlpResponse = nlpQueryResult
-          } catch (err) {
-            debug(`NLP ODATA Response ${iteration + 1}/${maxIterations} ignored, JSON parse err: ${err.message}`)
-            continue
           }
-          if (nlpQueryResult && nlpQueryResult.value && nlpQueryResult.value.length > 0) {
-            if (nlpQueryResult.value[0].intent && nlpQueryResult.value[0].intent.length > 0) {
-              this.nlpSessionIdCache[sessionId] = {
-                intent: {
-                  name: nlpQueryResult.value[0].intent,
-                  confidence: nlpQueryResult.value[0].intentScore
-                }
-              }
-            }
-            break
-          }
+          break
         }
-        if (!this.nlpSessionIdCache[sessionId]) {
-          this.nlpSessionIdCache[sessionId] = null
-        }
-      }
-      if (this.nlpSessionIdCache[sessionId]) {
-        botMsg.nlp = _.cloneDeep(this.nlpSessionIdCache[sessionId])
       }
     }
   }
