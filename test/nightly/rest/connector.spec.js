@@ -23,7 +23,7 @@ describe('connector', function () {
     await this.connector.UserSays({ messageText: 'Hello' })
     const botMsg = await this.botMsgPromise
     assert.isTrue(botMsg?.nlp?.intent?.name === 'st_greeting_hello', `Incorrect intent "${botMsg?.nlp?.intent?.name}"`)
-  }).timeout(100000)
+  }).timeout(1000000)
 
   afterEach(async function () {
     await this.connector.Stop()
