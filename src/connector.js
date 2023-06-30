@@ -237,7 +237,11 @@ class BotiumConnectorCognigy {
 
   async _extractNlp (botMsg) {
     const sessionId = botMsg.sourceData.sessionId || this.sessionId
-    if (sessionId && this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ENABLE]) {
+    if (!sessionId) {
+      debug(`NLP ODATA Request skipped, session id is not found. Source data: ${JSON.stringify(botMsg.sourceData)}`)
+    } else if (!this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ENABLE]) {
+      debug('NLP ODATA Request skipped, it is disabled')
+    } else {
       const odataURL = this.caps[Capabilities.COGNIGY_NLP_ANALYTICS_ODATA_URL]
       let version = odataURL.indexOf('/v') > 0 && parseFloat(odataURL.substring(odataURL.indexOf('/v') + 2))
       const urlHasVersion = !!version
