@@ -236,6 +236,7 @@ class BotiumConnectorCognigy {
   }
 
   async _extractNlp (botMsg) {
+    debug('NLP ODATA Request start')
     const sessionId = botMsg.sourceData.sessionId || this.sessionId
     if (!sessionId) {
       debug(`NLP ODATA Request skipped, session id is not found. Source data: ${JSON.stringify(botMsg.sourceData)}`)
