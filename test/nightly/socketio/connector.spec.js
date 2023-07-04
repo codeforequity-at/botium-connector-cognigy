@@ -1,17 +1,24 @@
 require('dotenv').config()
 const assert = require('chai').assert
+const EventEmitter = require('events')
+const _ = require('lodash')
+
 const BotiumConnectorCognigy = require('../../../src/connector')
 const { readCaps } = require('../helper')
-const EventEmitter = require('events')
 
 describe('connector', function () {
   beforeEach(async function () {
     this.caps = readCaps()
-    this.botMsgPromise = new Promise(resolve => {
+    this.botMsgPromise = new Promise((resolve, reject) => {
       this.botMsgPromiseResolve = resolve
+      this.botMsgPromiseReject = reject
     })
     const queueBotSays = (botMsg) => {
-      this.botMsgPromiseResolve(botMsg)
+      if (!_.isError(botMsg)) {
+        this.botMsgPromiseResolve(botMsg)
+      } else {
+        this.botMsgPromiseReject(botMsg)
+      }
     }
     const eventEmitter = new EventEmitter()
     this.connector = new BotiumConnectorCognigy({ queueBotSays, caps: this.caps, eventEmitter })
