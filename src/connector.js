@@ -1,7 +1,6 @@
 const util = require('util')
 const _ = require('lodash')
 const debug = require('debug')('botium-connector-cognigy')
-const request = require('request-promise-native')
 const { URL } = require('url')
 const { v4: uuidv4 } = require('uuid')
 
@@ -257,23 +256,21 @@ class BotiumConnectorCognigy {
 
         let nlpQueryResult = null
         try {
-          const nlpRequestOptions = {
-            method: 'GET',
-            url: url,
-            qs: {
-              $select: 'intent,intentScore,timestamp',
-              $top: 100000,
-              $orderby: 'timestamp desc',
-              $filter: `sessionId eq '${sessionId}' and timestamp gt '${this.prevTimestamp}'`,
-              apikey: this.caps.COGNIGY_NLP_ANALYTICS_ODATA_APIKEY
-            }
+          const queryParams = {
+            $select: 'intent,intentScore,timestamp',
+            $top: 100000,
+            $orderby: 'timestamp%20desc',
+            $filter: `sessionId%20eq%20'${sessionId}'%20and%20timestamp%20gt%20'${this.prevTimestamp}'`,
+            apikey: this.caps.COGNIGY_NLP_ANALYTICS_ODATA_APIKEY
           }
+          const nlpRequestOptions = { queryParams, url }
           botMsg.sourceData.nlpRequestOptions = nlpRequestOptions
           debug(`NLP ODATA Request ${iteration + 1}/${maxIterations}: ${JSON.stringify(nlpRequestOptions, null, 2)}`)
 
-          const dataRaw = await request(nlpRequestOptions)
-          debug(`NLP ODATA Response ${iteration + 1}/${maxIterations}: ${dataRaw}`)
-          nlpQueryResult = JSON.parse(dataRaw)
+          const dataRaw = await fetch(new URL('?' + new URLSearchParams(queryParams).toString(), url).toString())
+          nlpQueryResult = await dataRaw.json()
+          debug(`NLP ODATA Response ${iteration + 1}/${maxIterations}: ${(JSON.stringify(nlpQueryResult))}`)
+
           botMsg.sourceData.nlpResponse = nlpQueryResult
         } catch (err) {
           debug(`NLP ODATA Response ${iteration + 1}/${maxIterations} ignored, JSON parse err: ${err.message}`)
