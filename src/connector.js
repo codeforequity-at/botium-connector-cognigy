@@ -268,10 +268,14 @@ class BotiumConnectorCognigy {
           debug(`NLP ODATA Request ${iteration + 1}/${maxIterations}: ${JSON.stringify(nlpRequestOptions, null, 2)}`)
 
           const dataRaw = await fetch(new URL('?' + new URLSearchParams(queryParams).toString(), url).toString())
-          nlpQueryResult = await dataRaw.json()
-          debug(`NLP ODATA Response ${iteration + 1}/${maxIterations}: ${(JSON.stringify(nlpQueryResult))}`)
+          if (dataRaw.ok) {
+            nlpQueryResult = await dataRaw.json()
+            debug(`NLP ODATA Response ${iteration + 1}/${maxIterations}: ${(JSON.stringify(nlpQueryResult))}`)
 
-          botMsg.sourceData.nlpResponse = nlpQueryResult
+            botMsg.sourceData.nlpResponse = nlpQueryResult
+          } else {
+            debug(`NLP ODATA failed with ${dataRaw.status}`)
+          }
         } catch (err) {
           debug(`NLP ODATA Response ${iteration + 1}/${maxIterations} ignored, JSON parse err: ${err.message}`)
           continue
