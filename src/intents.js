@@ -67,7 +67,7 @@ const importCognigyIntents = async ({ caps, buildconvos }, { statusCallback }) =
   const endpoints = await _retrieveAll(client.indexEndpoints.bind(client))
 
   const endpoint = endpoints.find(e => e.channel === 'rest' && container.pluginInstance.caps.COGNIGY_URL.indexOf(e.URLToken) >= 0)
-  if (!endpoint) throw new Error(`Endpoint for URL ${container.pluginInstance.caps.COGNIGY_URL} not found`)
+  if (!endpoint) throw new Error(`Endpoint for URL ${container.pluginInstance.caps.COGNIGY_URL} not found. Available rest endpoint tokens are: ${endpoints.filter(e => e.channel === 'rest').map(e => e.URLToken).join(', ')} `)
   const endpointDetails = await client.readEndpoint({ endpointId: endpoint._id })
   if (!endpointDetails) throw new Error(`Endpoint details for URL ${container.pluginInstance.caps.COGNIGY_URL} not found`)
 
