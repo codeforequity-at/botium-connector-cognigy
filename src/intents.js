@@ -12,12 +12,10 @@ const CONTENT_PAGE_SIZE = 100
 
 const _retrieveAll = async (fn, opts = {}) => {
   const result = []
-  let skip = 0
   while (true) {
-    const r = await fn(Object.assign({}, opts, { skip, limit: CONTENT_PAGE_SIZE }))
+    const r = await fn(Object.assign({}, opts, { skip: result.length, limit: CONTENT_PAGE_SIZE }))
     if (r.items && r.items.length > 0) {
       result.push(...r.items)
-      skip += result.length
     } else {
       break
     }
