@@ -2,7 +2,6 @@
 
 [![NPM](https://nodei.co/npm/botium-connector-cognigy.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/botium-connector-cognigy/)
 
-[![Codeship Status for codeforequity-at/botium-connector-cognigy](https://app.codeship.com/projects/7ebeef20-e9d6-0137-bd39-4a621f4be870/status?branch=master)](https://app.codeship.com/projects/374237)
 [![npm version](https://badge.fury.io/js/botium-connector-cognigy.svg)](https://badge.fury.io/js/botium-connector-cognigy)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
 
