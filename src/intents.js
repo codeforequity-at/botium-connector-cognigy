@@ -99,7 +99,7 @@ const importCognigyIntents = async ({ caps, buildconvos }, { statusCallback }) =
 
   for (const projectFlow of flows) {
     const flowDetails = await client.readFlow({ flowId: projectFlow._id })
-    const exportedIntents = await client.exportIntents({ flowId: flowDetails._id, localeId: locale._id, format: 'json' })
+    const exportedIntents = await client.exportIntents({ flowId: flowDetails._id, localeId: mainFlowLocale._id, format: 'json' })
     if (exportedIntents && exportedIntents.length > 0) {
       status(`Downloaded ${exportedIntents.length} intent(s) (${exportedIntents.map(i => i.name).join(', ')}) for flow "${flowDetails.name}" (${flowDetails._id}) using locale "${flowDetails.localeReference}"`)
       const disabledIntents = exportedIntents.filter(i => i.isDisabled)
