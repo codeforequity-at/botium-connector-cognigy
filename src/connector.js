@@ -18,7 +18,8 @@ const Capabilities = {
   COGNIGY_NLP_ANALYTICS_WAIT: 'COGNIGY_NLP_ANALYTICS_WAIT',
   COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL: 'COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL',
   COGNIGY_API_URL: 'COGNIGY_API_URL',
-  COGNIGY_API_APIKEY: 'COGNIGY_API_APIKEY'
+  COGNIGY_API_APIKEY: 'COGNIGY_API_APIKEY',
+  COGNIGY_BODY_FROM_JSON: 'COGNIGY_BODY_FROM_JSON'
 }
 
 const Defaults = {
@@ -64,6 +65,7 @@ class BotiumConnectorCognigy {
             sessionId: '{{botium.conversationId}}',
             text: '{{msg.messageText}}'
           },
+          [CoreCapabilities.SIMPLEREST_BODY_FROM_JSON]: this.caps[Capabilities.COGNIGY_BODY_FROM_JSON],
           [CoreCapabilities.SIMPLEREST_BODY_JSONPATH]: '$.outputStack.*',
           [CoreCapabilities.SIMPLEREST_RESPONSE_HOOK]: async ({ botMsg, botMsgRoot }) => {
             await this._extractNlp(botMsg)

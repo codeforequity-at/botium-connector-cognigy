@@ -152,6 +152,10 @@ For downloading intents and user examples
 ### COGNIGY_API_APIKEY
 For downloading intents and user examples
 
+### COGNIGY_BODY_FROM_JSON
+If set to true, and the message is a JSON object, the message will be sent as the body of the request. 
+The message has to be in Cognigy API request format.
+
 ### Roadmap
 * Support for additional channel and channel content
 * Support for intent/entity asserter
