@@ -85,6 +85,14 @@ module.exports = {
         type: 'secret',
         required: false,
         advanced: true
+      },
+      {
+        name: 'COGNIGY_BODY_FROM_JSON',
+        label: 'JSON message to body (REST only)',
+        description: 'Send JSON message as request body',
+        type: 'boolean',
+        required: false,
+        advanced: true
       }
     ],
     features: {
