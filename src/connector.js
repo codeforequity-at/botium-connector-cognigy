@@ -237,6 +237,12 @@ class BotiumConnectorCognigy {
   }
 
   async _extractNlp (botMsg) {
+    // if there are more bot messages in one response, then it has no sense to extract NLP data, except the first one.
+    // Subsequent extractions would retrieve nothing, so they would just do some unnecessary requests.
+    if (botMsg?.sourceData?.nlpRequestOptions) {
+      debug('NLP ODATA Request skipped, nlp info already extracted for this response')
+      return
+    }
     debug('NLP ODATA Request start')
     const sessionId = botMsg.sourceData.sessionId || this.sessionId
     if (!sessionId) {
