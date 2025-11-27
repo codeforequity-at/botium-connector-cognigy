@@ -7,6 +7,8 @@ const EventEmitter = require('events')
 describe('connector', function () {
   beforeEach(async function () {
     this.caps = readCaps()
+    // TODO testlog
+    console.log(`Using ${this.caps.PROJECTNAME} chatbot`)
     this.botMsgPromise = new Promise(resolve => {
       this.botMsgPromiseResolve = resolve
     })

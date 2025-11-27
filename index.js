@@ -65,7 +65,7 @@ module.exports = {
       {
         name: 'COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL',
         label: 'OData NLP Timeout',
-        description: 'Time (in ms) to wait for availability of NLP Analyics Data after each Convo Step (Default: 5000ms)',
+        description: 'Time (in ms) to wait for availability of NLP Analytics Data after each Convo Step (Default: 5000ms)',
         type: 'int',
         required: false,
         advanced: true
@@ -93,7 +93,35 @@ module.exports = {
         type: 'boolean',
         required: false,
         advanced: true
-      }
+      },
+      {
+        name: 'COGNIGY_REQUEST_HOOK',
+        label: 'Request Hook',
+        description: 'Request Hook for Cognigy',
+        type: 'javascript',
+        required: false,
+        advanced: true
+      },
+      {
+        name: 'COGNIGY_INCLUDE_EMPTY',
+        label: 'Include Empty',
+        description: 'Include empty responses',
+        type: 'boolean',
+        required: false,
+        advanced: true
+      },
+      {
+        name: 'COGNIGY_MESSAGE_LIST_MERGE',
+        label: 'Message merging behavior',
+        description: 'Control how multiple messages in a single response are handled',
+        type: 'choice',
+        choices: [
+          { name: 'Do not merge', key: 'OFF' },
+          { name: 'Merge text only messages', key: 'MERGE_TEXT' }
+        ],
+        required: false,
+        advanced: true
+      },
     ],
     features: {
       intentResolution: true,
