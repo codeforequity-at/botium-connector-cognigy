@@ -121,7 +121,7 @@ module.exports = {
         ],
         required: false,
         advanced: true
-      },
+      }
     ],
     features: {
       intentResolution: true,
