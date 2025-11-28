@@ -20,7 +20,9 @@ const Capabilities = {
   COGNIGY_API_URL: 'COGNIGY_API_URL',
   COGNIGY_API_APIKEY: 'COGNIGY_API_APIKEY',
   COGNIGY_BODY_FROM_JSON: 'COGNIGY_BODY_FROM_JSON',
-  COGNIGY_REQUEST_HOOK: 'COGNIGY_REQUEST_HOOK'
+  COGNIGY_REQUEST_HOOK: 'COGNIGY_REQUEST_HOOK',
+  COGNIGY_INCLUDE_EMPTY: 'COGNIGY_INCLUDE_EMPTY',
+  COGNIGY_MESSAGE_LIST_MERGE: 'COGNIGY_MESSAGE_LIST_MERGE'
 }
 
 const Defaults = {
@@ -69,6 +71,9 @@ class BotiumConnectorCognigy {
           [CoreCapabilities.SIMPLEREST_BODY_FROM_JSON]: this.caps[Capabilities.COGNIGY_BODY_FROM_JSON],
           [CoreCapabilities.SIMPLEREST_BODY_JSONPATH]: '$.outputStack.*',
           [CoreCapabilities.SIMPLEREST_REQUEST_HOOK]: this.caps[Capabilities.COGNIGY_REQUEST_HOOK],
+          [CoreCapabilities.SIMPLEREST_IGNORE_EMPTY]: !this.caps[Capabilities.COGNIGY_INCLUDE_EMPTY],
+          [CoreCapabilities.SIMPLEREST_MESSAGE_LIST_MERGE]: this.caps[Capabilities.COGNIGY_MESSAGE_LIST_MERGE],
+
           [CoreCapabilities.SIMPLEREST_RESPONSE_HOOK]: async ({ botMsg, botMsgRoot }) => {
             await this._extractNlp(botMsg)
 
