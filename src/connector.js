@@ -12,6 +12,7 @@ const Capabilities = {
   COGNIGY_ENDPOINT_TYPE: 'COGNIGY_ENDPOINT_TYPE',
   COGNIGY_URL: 'COGNIGY_URL',
   COGNIGY_USER_ID: 'COGNIGY_USER_ID',
+  COGNIGY_CONTEXT: 'COGNIGY_CONTEXT',
   COGNIGY_NLP_ANALYTICS_ENABLE: 'COGNIGY_NLP_ANALYTICS_ENABLE',
   COGNIGY_NLP_ANALYTICS_ODATA_URL: 'COGNIGY_NLP_ANALYTICS_ODATA_URL',
   COGNIGY_NLP_ANALYTICS_ODATA_APIKEY: 'COGNIGY_NLP_ANALYTICS_ODATA_APIKEY',
@@ -66,16 +67,54 @@ class BotiumConnectorCognigy {
           [CoreCapabilities.SIMPLEREST_BODY_TEMPLATE]: {
             userId: this.caps[Capabilities.COGNIGY_USER_ID] || '{{botium.conversationId}}',
             sessionId: '{{botium.conversationId}}',
-            text: '{{msg.messageText}}'
+            text: '{{msg.messageText}}',
+            data: {}
           },
           [CoreCapabilities.SIMPLEREST_BODY_FROM_JSON]: this.caps[Capabilities.COGNIGY_BODY_FROM_JSON],
           [CoreCapabilities.SIMPLEREST_BODY_JSONPATH]: '$.outputStack.*',
-          [CoreCapabilities.SIMPLEREST_REQUEST_HOOK]: this.caps[Capabilities.COGNIGY_REQUEST_HOOK],
+          [CoreCapabilities.SIMPLEREST_REQUEST_HOOK]: ({ msg, requestOptions }) => {
+            // Merge initial context with any SET_COGNIGY_CONTEXT from the message
+            const contextToSend = Object.assign({}, this.contextData)
+
+            if (msg.SET_COGNIGY_CONTEXT) {
+              Object.assign(contextToSend, msg.SET_COGNIGY_CONTEXT)
+              Object.assign(this.contextData, msg.SET_COGNIGY_CONTEXT)
+              debug(`Updated context with SET_COGNIGY_CONTEXT: ${JSON.stringify(msg.SET_COGNIGY_CONTEXT)}`)
+            }
+
+            // Inject context into request body data field
+            if (Object.keys(contextToSend).length > 0) {
+              requestOptions.body.data = contextToSend
+              debug(`Sending context in request: ${JSON.stringify(contextToSend)}`)
+            }
+
+            // Call user's custom request hook if provided (for backward compatibility)
+            if (this.caps[Capabilities.COGNIGY_REQUEST_HOOK]) {
+              debug('Calling custom COGNIGY_REQUEST_HOOK')
+              this.caps[Capabilities.COGNIGY_REQUEST_HOOK]({ msg, requestOptions })
+            }
+          },
           [CoreCapabilities.SIMPLEREST_IGNORE_EMPTY]: !this.caps[Capabilities.COGNIGY_INCLUDE_EMPTY],
           [CoreCapabilities.SIMPLEREST_MESSAGE_LIST_MERGE]: this.caps[Capabilities.COGNIGY_MESSAGE_LIST_MERGE],
-
           [CoreCapabilities.SIMPLEREST_RESPONSE_HOOK]: async ({ botMsg, botMsgRoot }) => {
             await this._extractNlp(botMsg)
+
+            // Extract context from response (filter out internal Cognigy fields)
+            if (botMsgRoot.data) {
+              // Filter out Cognigy internal fields (fields starting with _ and known internal properties)
+              const contextData = Object.keys(botMsgRoot.data)
+                .filter(key => !key.startsWith('_') && !['linear', 'loop', 'text', 'type', 'data'].includes(key))
+                .reduce((obj, key) => {
+                  obj[key] = botMsgRoot.data[key]
+                  return obj
+                }, {})
+
+              if (Object.keys(contextData).length > 0) {
+                botMsg.contextData = contextData
+                Object.assign(this.contextData, contextData)
+                debug(`Extracted context from response: ${JSON.stringify(contextData)}`)
+              }
+            }
 
             this._extractBotText(botMsg, botMsgRoot)
             this._extractBotButtons(botMsg, botMsgRoot)
@@ -102,6 +141,18 @@ class BotiumConnectorCognigy {
 
   async Start () {
     this.prevTimestamp = new Date().toISOString()
+    this.contextData = {}
+
+    // Load initial context from capabilities
+    if (this.caps[Capabilities.COGNIGY_CONTEXT]) {
+      if (_.isString(this.caps[Capabilities.COGNIGY_CONTEXT])) {
+        Object.assign(this.contextData, JSON.parse(this.caps[Capabilities.COGNIGY_CONTEXT]))
+      } else {
+        Object.assign(this.contextData, this.caps[Capabilities.COGNIGY_CONTEXT])
+      }
+      debug(`Loaded initial context: ${JSON.stringify(this.contextData)}`)
+    }
+
     if (this.caps[Capabilities.COGNIGY_ENDPOINT_TYPE] !== 'SOCKETIO') {
       return this.delegateContainer.Start()
     } else {
@@ -118,6 +169,24 @@ class BotiumConnectorCognigy {
           sender: 'bot',
           sourceData: botMsgRoot
         }
+
+        // Extract context from SOCKETIO response (filter out internal Cognigy fields)
+        if (botMsgRoot.data) {
+          // Filter out Cognigy internal fields (fields starting with _ and known internal properties)
+          const contextData = Object.keys(botMsgRoot.data)
+            .filter(key => !key.startsWith('_') && !['linear', 'loop', 'text', 'type', 'data'].includes(key))
+            .reduce((obj, key) => {
+              obj[key] = botMsgRoot.data[key]
+              return obj
+            }, {})
+
+          if (Object.keys(contextData).length > 0) {
+            botMsg.contextData = contextData
+            Object.assign(this.contextData, contextData)
+            debug(`Extracted context from SOCKETIO response: ${JSON.stringify(contextData)}`)
+          }
+        }
+
         await this._extractNlp(botMsg)
         this._extractBotText(botMsg, botMsgRoot)
         this._extractBotButtons(botMsg, botMsgRoot)
@@ -147,14 +216,33 @@ class BotiumConnectorCognigy {
     if (this.caps[Capabilities.COGNIGY_ENDPOINT_TYPE] !== 'SOCKETIO') {
       return this.delegateContainer.UserSays(msg)
     } else {
-      this.wsClient.sendMessage(msg.messageText)
+      const payload = {
+        text: msg.messageText
+      }
+
+      // Add context if available
+      const contextToSend = Object.assign({}, this.contextData)
+      if (msg.SET_COGNIGY_CONTEXT) {
+        Object.assign(contextToSend, msg.SET_COGNIGY_CONTEXT)
+        Object.assign(this.contextData, msg.SET_COGNIGY_CONTEXT)
+        debug(`Updated context with SET_COGNIGY_CONTEXT: ${JSON.stringify(msg.SET_COGNIGY_CONTEXT)}`)
+      }
+
+      if (Object.keys(contextToSend).length > 0) {
+        payload.data = contextToSend
+        debug(`Sending context via SOCKETIO: ${JSON.stringify(contextToSend)}`)
+      }
+
+      this.wsClient.sendMessage(payload.text, payload.data)
     }
   }
 
   Stop () {
     if (this.caps[Capabilities.COGNIGY_ENDPOINT_TYPE] !== 'SOCKETIO') {
+      this.contextData = {}
       return this.delegateContainer.Stop()
     } else {
+      this.contextData = {}
       this.sessionId = null
       if (this.wsClient) {
         this.wsClient.disconnect()

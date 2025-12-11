@@ -121,6 +121,14 @@ module.exports = {
         ],
         required: false,
         advanced: true
+      },
+      {
+        name: 'COGNIGY_CONTEXT',
+        label: 'Initial Context',
+        description: 'Initial context data to send with every message (JSON format).',
+        type: 'json',
+        required: false,
+        advanced: true
       }
     ],
     features: {

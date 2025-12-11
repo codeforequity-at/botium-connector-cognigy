@@ -1,6 +1,6 @@
 {
   "name": "botium-connector-cognigy",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "Botium Connector for Cognigy AI",
   "main": "dist/botium-connector-cognigy-cjs.js",
   "module": "dist/botium-connector-cognigy-es.js",
@@ -11,7 +11,7 @@
     "build": "npm run eslint && rollup -c && cp logo.png dist",
     "eslint": "eslint index.js bin/**/*.js src/**/*.js",
     "eslint-fix": "eslint --fix index.js bin/**/*.js src/**/*.js",
-    "test": "echo Just placeholder, no tests here yet",
+    "test": "mocha test/unit/**/*spec.js",
     "test-nightly-rest": "mocha test/nightly/rest/**/*spec.js",
     "test-nightly-socketio": "mocha test/nightly/socketio/**/*spec.js"
   },
@@ -24,9 +24,9 @@
     "@babel/preset-env": "^7.6.2",
     "botium-connector-cognigy": ".",
     "botium-core": "^1.13.15",
-    "dotenv": "^16.0.3",
     "chai": "^4.3.7",
     "chai-as-promised": "^7.1.1",
+    "dotenv": "^16.0.3",
     "eslint": "^7.32.0",
     "eslint-config-standard": "^14.1.0",
     "eslint-plugin-import": "^2.18.2",
