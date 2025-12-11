@@ -259,7 +259,12 @@ class BotiumConnectorCognigy {
 
   _extractBotText (botMsg, botMsgRoot) {
     const botMsgs = []
-    let qrsText = _.get(botMsgRoot, 'data._data._cognigy._default._quickReplies.text')
+    let qrsText = _.get(botMsgRoot, 'data._data._cognigy._default._quickReplies.text') ||
+                  _.get(botMsgRoot, 'data._cognigy._default._quickReplies.text')
+    if (_.isNil(qrsText)) {
+      qrsText = _.get(botMsgRoot, 'data._data._cognigy._default._buttons.text') ||
+                _.get(botMsgRoot, 'data._cognigy._default._buttons.text')
+    }
     if (_.isNil(qrsText)) {
       qrsText = _.get(botMsgRoot, 'data._plugin.type')
       if (qrsText) qrsText = `[${qrsText}]`
@@ -290,24 +295,33 @@ class BotiumConnectorCognigy {
 
   _extractBotButtons (botMsg, botMsgRoot) {
     const buttons =
-            _.get(botMsgRoot, 'data._data._cognigy._default._buttons.buttons')
+            _.get(botMsgRoot, 'data._data._cognigy._default._buttons.buttons') ||
+            _.get(botMsgRoot, 'data._cognigy._default._buttons.buttons')
     if (buttons) {
       const buttonsTransformed = buttons.filter(qr => qr.payload || qr.url || qr.intentName).map(qr => ({
         text: qr.title,
         payload: qr.payload || qr.url || qr.intentName
       }))
+      if (!botMsg.buttons) {
+        botMsg.buttons = []
+      }
       buttonsTransformed.forEach(b => botMsg.buttons.push(b))
     }
   }
 
   _extractBotQuickReplies (botMsg, botMsgRoot) {
-    const qrs = _.get(botMsgRoot, 'data._data._cognigy._default._quickReplies.quickReplies')
+    const qrs = _.get(botMsgRoot, 'data._data._cognigy._default._quickReplies.quickReplies') ||
+                _.get(botMsgRoot, 'data._cognigy._default._quickReplies.quickReplies')
     if (qrs) {
-      botMsg.buttons = qrs.filter(qr => qr.payload).map(qr => ({
+      if (!botMsg.buttons) {
+        botMsg.buttons = []
+      }
+      const qrsTransformed = qrs.filter(qr => qr.payload).map(qr => ({
         text: qr.title,
         payload: qr.payload,
         imageUri: qr.image_url
       }))
+      qrsTransformed.forEach(qr => botMsg.buttons.push(qr))
     }
   }
 
