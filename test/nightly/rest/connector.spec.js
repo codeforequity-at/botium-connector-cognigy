@@ -6,23 +6,35 @@ const EventEmitter = require('events')
 
 describe('connector', function () {
   beforeEach(async function () {
-    this.caps = readCaps()
-    this.botMsgPromise = new Promise(resolve => {
-      this.botMsgPromiseResolve = resolve
-    })
-    const queueBotSays = (botMsg) => {
-      this.botMsgPromiseResolve(botMsg)
+    this.init = async (caps) => {    
+      caps = Object.assign({}, readCaps(), caps)
+      this.botMsgPromise = new Promise(resolve => {
+        this.botMsgPromiseResolve = resolve
+      })
+      const queueBotSays = (botMsg) => {
+        this.botMsgPromiseResolve(botMsg)
+      }
+      const eventEmitter = new EventEmitter()
+      this.connector = new BotiumConnectorCognigy({ queueBotSays, caps, eventEmitter })
+      await this.connector.Validate()
+      await this.connector.Start()
     }
-    const eventEmitter = new EventEmitter()
-    this.connector = new BotiumConnectorCognigy({ queueBotSays, caps: this.caps, eventEmitter })
-    await this.connector.Validate()
-    await this.connector.Start()
   })
 
   it('should successfully get an answer for say hello', async function () {
+    await this.init()
     await this.connector.UserSays({ messageText: 'Hello' })
     const botMsg = await this.botMsgPromise
-    assert.isTrue(botMsg?.nlp?.intent?.name === 'st_greeting_hello', `Incorrect intent "${botMsg?.nlp?.intent?.name}"`)
+    assert.deepEqual(botMsg?.messageText, 'Hello! Welcome to Cognigy Support. How can I assist you today?')
+  }).timeout(1000000)
+
+  it('should handle request hook', async function () {
+    await this.init({ "COGNIGY_REQUEST_HOOK": ({ requestOptions, context, botium }) => {
+      requestOptions.body.sessionId = "dummySessionId";
+    } })
+    await this.connector.UserSays({ messageText: 'Hello' })
+    const botMsg = await this.botMsgPromise
+    assert.isTrue(botMsg?.sourceData?.sessionId === 'dummySessionId', `Incorrect sessionId "${botMsg?.sourceData?.sessionId}"`)
   }).timeout(1000000)
 
   afterEach(async function () {
