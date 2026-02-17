@@ -3,9 +3,11 @@ const _ = require('lodash')
 const debug = require('debug')('botium-connector-cognigy')
 const { URL } = require('url')
 const { v4: uuidv4 } = require('uuid')
+const path = require('path')
+const { pathToFileURL } = require('url')
 
 const SimpleRestContainer = require('botium-core/src/containers/plugins/SimpleRestContainer')
-const { executeHook, getHook } = require('botium-core/src/helpers/HookUtils')
+const { executeHook } = require('botium-core/src/helpers/HookUtils')
 const CoreCapabilities = require('botium-core/src/Capabilities')
 const { SocketClient } = require('@cognigy/socket-client')
 
@@ -36,6 +38,41 @@ const _sleep = async ms => {
   return new Promise((resolve) => {
     setTimeout(resolve, ms)
   })
+}
+
+const _loadHookFunction = async (caps, hookSpec) => {
+  if (_.isFunction(hookSpec)) {
+    debug('Hook is already a function')
+    return hookSpec
+  }
+
+  if (_.isString(hookSpec) && caps.SAFEDIR) {
+    const hookPath = path.resolve(caps.SAFEDIR, hookSpec)
+
+    if (!hookPath.startsWith(path.resolve(caps.SAFEDIR))) {
+      throw new Error(`Hook path "${hookPath}" is outside SAFEDIR`)
+    }
+
+    debug(`Loading hook from: ${hookPath}`)
+
+    try {
+      const fileUrl = pathToFileURL(hookPath).href
+      const module = await import(fileUrl)
+      const hookFn = module.default || module
+
+      if (_.isFunction(hookFn)) {
+        debug(`Successfully loaded ES module hook from ${hookSpec}`)
+        return hookFn
+      } else {
+        throw new Error(`Expected function from hook, got: ${typeof hookFn}`)
+      }
+    } catch (error) {
+      debug(`Failed to load hook: ${error.message}`)
+      throw error
+    }
+  }
+
+  throw new Error(`Hook must be a function or file path string, got: ${typeof hookSpec}`)
 }
 
 class BotiumConnectorCognigy {
@@ -73,7 +110,7 @@ class BotiumConnectorCognigy {
           },
           [CoreCapabilities.SIMPLEREST_BODY_FROM_JSON]: this.caps[Capabilities.COGNIGY_BODY_FROM_JSON],
           [CoreCapabilities.SIMPLEREST_BODY_JSONPATH]: '$.outputStack.*',
-          [CoreCapabilities.SIMPLEREST_REQUEST_HOOK]: (args) => {
+          [CoreCapabilities.SIMPLEREST_REQUEST_HOOK]: async (args) => {
             const { msg, requestOptions } = args
             // Merge initial context with any SET_COGNIGY_CONTEXT from the message
             const contextToSend = Object.assign({}, this.contextData)
@@ -90,11 +127,25 @@ class BotiumConnectorCognigy {
               debug(`Sending context in request: ${JSON.stringify(contextToSend)}`)
             }
 
-            // Call user's custom request hook if provided (for backward compatibility)
+            // Call user's custom request hook if provided
+            // Load at Botium Box level (supports ES modules)
             if (this.caps[Capabilities.COGNIGY_REQUEST_HOOK]) {
-              debug('Calling custom COGNIGY_REQUEST_HOOK')
-              executeHook(this.caps, getHook(this.caps, this.caps[Capabilities.COGNIGY_REQUEST_HOOK]), args)
+              try {
+                // Load hook at Botium Box level (handles ES modules)
+                const hookFunction = await _loadHookFunction(this.caps, this.caps[Capabilities.COGNIGY_REQUEST_HOOK])
+
+                // Execute the loaded function
+                await executeHook(this.caps, hookFunction, args)
+              } catch (err) {
+                console.error('ERROR in custom COGNIGY_REQUEST_HOOK:', err.message)
+                console.error('Stack:', err.stack)
+              }
+            } else {
+              console.log('3. No COGNIGY_REQUEST_HOOK capability found')
+              console.log('   - Available capabilities:', Object.keys(this.caps).filter(k => k.includes('COGNIGY')))
             }
+
+            console.log('========== COGNIGY REQUEST HOOK END ==========')
           },
           [CoreCapabilities.SIMPLEREST_IGNORE_EMPTY]: !this.caps[Capabilities.COGNIGY_INCLUDE_EMPTY],
           [CoreCapabilities.SIMPLEREST_MESSAGE_LIST_MERGE]: this.caps[Capabilities.COGNIGY_MESSAGE_LIST_MERGE],
