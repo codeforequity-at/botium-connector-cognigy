@@ -175,7 +175,7 @@ describe("Context Management", function () {
       const msg = { messageText: "Hello" };
       const requestOptions = { body: { text: "Hello", data: {} } };
 
-      requestHook({ msg, requestOptions });
+      await requestHook({ msg, requestOptions });
 
       assert.isTrue(customHookCalled);
       assert.deepEqual(requestOptions.body.data, { userId: "123" });

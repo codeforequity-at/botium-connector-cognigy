@@ -73,7 +73,7 @@ class BotiumConnectorCognigy {
           },
           [CoreCapabilities.SIMPLEREST_BODY_FROM_JSON]: this.caps[Capabilities.COGNIGY_BODY_FROM_JSON],
           [CoreCapabilities.SIMPLEREST_BODY_JSONPATH]: '$.outputStack.*',
-          [CoreCapabilities.SIMPLEREST_REQUEST_HOOK]: (args) => {
+          [CoreCapabilities.SIMPLEREST_REQUEST_HOOK]: async (args) => {
             const { msg, requestOptions } = args
             // Merge initial context with any SET_COGNIGY_CONTEXT from the message
             const contextToSend = Object.assign({}, this.contextData)
@@ -93,7 +93,7 @@ class BotiumConnectorCognigy {
             // Call user's custom request hook if provided (for backward compatibility)
             if (this.caps[Capabilities.COGNIGY_REQUEST_HOOK]) {
               debug('Calling custom COGNIGY_REQUEST_HOOK')
-              executeHook(this.caps, getHook(this.caps, this.caps[Capabilities.COGNIGY_REQUEST_HOOK]), args)
+              await executeHook(this.caps, getHook(this.caps, this.caps[Capabilities.COGNIGY_REQUEST_HOOK]), args)
             }
           },
           [CoreCapabilities.SIMPLEREST_IGNORE_EMPTY]: !this.caps[Capabilities.COGNIGY_INCLUDE_EMPTY],
