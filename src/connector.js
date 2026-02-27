@@ -123,6 +123,7 @@ class BotiumConnectorCognigy {
             this._extractBotMedia(botMsg, botMsgRoot)
             this._extractBotQuickReplies(botMsg, botMsgRoot)
             this._extractBotGalleryItems(botMsg, botMsgRoot)
+            this._extractBotAdaptiveCard(botMsg, botMsgRoot)
             this.prevTimestamp = new Date().toISOString()
           }
         }
@@ -195,6 +196,7 @@ class BotiumConnectorCognigy {
         this._extractBotMedia(botMsg, botMsgRoot)
         this._extractBotQuickReplies(botMsg, botMsgRoot)
         this._extractBotGalleryItems(botMsg, botMsgRoot)
+        this._extractBotAdaptiveCard(botMsg, botMsgRoot)
         if (Object.keys(botMsg).length > 2) {
           this._sendBotMsg(botMsg)
         }
@@ -341,6 +343,85 @@ class BotiumConnectorCognigy {
         }))
       }))
     }
+  }
+
+  _extractBotAdaptiveCard (botMsg, botMsgRoot) {
+    const adaptiveCard =
+      _.get(botMsgRoot, 'data._data._cognigy._default._adaptiveCard.adaptiveCard') ||
+      _.get(botMsgRoot, 'data._cognigy._default._adaptiveCard.adaptiveCard')
+
+    if (!adaptiveCard || !adaptiveCard.body) return
+
+    const mapButton = (b) => ({
+      text: b.title || b.text,
+      payload: b.data || b.url
+    })
+
+    const mapImage = (i) => ({
+      mediaUri: i.url,
+      altText: i.alt || i.altText
+    })
+
+    const mapAdaptiveCardRecursive = (card) => {
+      const textBlocks = this._deepFilter(card.body, (t) => t.type, (t) => t.type === 'TextBlock')
+      const imageBlocks = this._deepFilter(card.body, (t) => t.type, (t) => t.type === 'Image')
+      const buttonBlocks = this._deepFilter(card.body, (t) => t.type, (t) => t.type.startsWith('Action.'))
+      const actions = (card.actions || []).concat(buttonBlocks || [])
+      const subcards = actions
+        .filter(a => (a.type === 'Action.ShowCard' && a.card && a.card.body))
+        .map(a => mapAdaptiveCardRecursive(a.card))
+      const inputs = this._deepFilter(card.body, (t) => t.type, (t) => t.type.startsWith('Input.'))
+      const forms = []
+      for (const input of inputs) {
+        forms.push({
+          name: input.id,
+          label: input.label,
+          type: input.type.substring('Input.'.length),
+          options: input.choices
+        })
+      }
+      return {
+        text: textBlocks && textBlocks.map(t => t.text),
+        image: imageBlocks && imageBlocks.length > 0 && mapImage(imageBlocks[0]),
+        buttons: actions.map(mapButton),
+        media: imageBlocks && imageBlocks.length > 1 && imageBlocks.slice(1).map(mapImage),
+        forms: forms.length ? forms : null,
+        cards: subcards.length ? subcards : null,
+        sourceData: card
+      }
+    }
+
+    const card = mapAdaptiveCardRecursive(adaptiveCard)
+
+    if (!botMsg.cards) {
+      botMsg.cards = []
+    }
+    botMsg.cards.push(card)
+
+    if (!botMsg.messageText && card.text && _.isArray(card.text) && card.text.length > 0) {
+      botMsg.messageText = card.text[0]
+    }
+  }
+
+  _deepFilter (item, selectFn, filterFn) {
+    if (!item) return []
+    let result = []
+    if (_.isArray(item)) {
+      item.filter(selectFn).forEach(subItem => {
+        result = result.concat(this._deepFilter(subItem, selectFn, filterFn))
+      })
+    } else if (selectFn(item)) {
+      if (filterFn(item)) {
+        result.push(item)
+      } else {
+        if (!item.type || item.type !== 'Action.ShowCard') {
+          Object.getOwnPropertyNames(item).forEach(key => {
+            result = result.concat(this._deepFilter(item[key], selectFn, filterFn))
+          })
+        }
+      }
+    }
+    return result
   }
 
   _sendBotMsg (botMsg) {
