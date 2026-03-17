@@ -84,10 +84,24 @@ class BotiumConnectorCognigy {
               debug(`Updated context with SET_COGNIGY_CONTEXT: ${JSON.stringify(msg.SET_COGNIGY_CONTEXT)}`)
             }
 
-            // Inject context into request body data field
+            let dataToSend = {}
+            if (msg.forms && msg.forms.length > 0) {
+              const formValues = {}
+              msg.forms.forEach(f => {
+                _.set(formValues, f.name, f.value)
+              })
+              dataToSend = { request: { value: formValues } }
+              debug(`Sending form data in request: ${JSON.stringify(formValues)}`)
+            }
+
+            // Merge context with form data
             if (Object.keys(contextToSend).length > 0) {
-              requestOptions.body.data = contextToSend
+              Object.assign(dataToSend, contextToSend)
               debug(`Sending context in request: ${JSON.stringify(contextToSend)}`)
+            }
+
+            if (Object.keys(dataToSend).length > 0) {
+              requestOptions.body.data = dataToSend
             }
 
             // Call user's custom request hook if provided (for backward compatibility)
@@ -224,17 +238,29 @@ class BotiumConnectorCognigy {
         text: msg.messageText
       }
 
-      // Add context if available
+      let dataToSend = {}
+      if (msg.forms && msg.forms.length > 0) {
+        const formValues = {}
+        msg.forms.forEach(f => {
+          _.set(formValues, f.name, f.value)
+        })
+        dataToSend = { request: { value: formValues } }
+        debug(`Sending form data via SOCKETIO: ${JSON.stringify(formValues)}`)
+      }
+
       const contextToSend = Object.assign({}, this.contextData)
       if (msg.SET_COGNIGY_CONTEXT) {
         Object.assign(contextToSend, msg.SET_COGNIGY_CONTEXT)
         Object.assign(this.contextData, msg.SET_COGNIGY_CONTEXT)
         debug(`Updated context with SET_COGNIGY_CONTEXT: ${JSON.stringify(msg.SET_COGNIGY_CONTEXT)}`)
       }
-
       if (Object.keys(contextToSend).length > 0) {
-        payload.data = contextToSend
+        Object.assign(dataToSend, contextToSend)
         debug(`Sending context via SOCKETIO: ${JSON.stringify(contextToSend)}`)
+      }
+
+      if (Object.keys(dataToSend).length > 0) {
+        payload.data = dataToSend
       }
 
       this.wsClient.sendMessage(payload.text, payload.data)
