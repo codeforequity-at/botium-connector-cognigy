@@ -2,8 +2,16 @@
   "name": "botium-connector-cognigy",
   "version": "0.0.23",
   "description": "Botium Connector for Cognigy AI",
-  "main": "dist/botium-connector-cognigy-cjs.js",
+  "type": "module",
+  "main": "dist/botium-connector-cognigy-cjs.cjs",
   "module": "dist/botium-connector-cognigy-es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/botium-connector-cognigy-es.js",
+      "require": "./dist/botium-connector-cognigy-cjs.cjs",
+      "default": "./dist/botium-connector-cognigy-es.js"
+    }
+  },
   "bin": {
     "botium-connector-cognigy-cli": "./bin/cli.js"
   },
@@ -50,6 +58,7 @@
     "mime-types": "^2.1.24",
     "mkdirp": "^1.0.4",
     "slug": "^5.1.0",
+    "uuid": "^9.0.0",
     "yargs": "^17.3.0"
   },
   "peerDependencies": {

@@ -11,7 +11,7 @@ export default {
       sourcemap: true
     },
     {
-      file: 'dist/botium-connector-cognigy-cjs.js',
+      file: 'dist/botium-connector-cognigy-cjs.cjs',
       format: 'cjs',
       sourcemap: true
     }

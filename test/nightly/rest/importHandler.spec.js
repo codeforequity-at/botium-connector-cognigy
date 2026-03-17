@@ -1,7 +1,7 @@
-require('dotenv').config()
-const assert = require('chai').assert
-const { importHandler } = require('../../../src/intents')
-const { readCaps } = require('../helper')
+import 'dotenv/config'
+import { assert } from 'chai'
+import { importHandler } from '../../../src/intents.js'
+import { readCaps } from '../helper.js'
 
 describe('importhandler', function () {
   beforeEach(async function () {

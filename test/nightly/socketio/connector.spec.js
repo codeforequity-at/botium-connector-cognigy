@@ -1,10 +1,9 @@
-require('dotenv').config()
-const assert = require('chai').assert
-const EventEmitter = require('events')
-const _ = require('lodash')
-
-const BotiumConnectorCognigy = require('../../../src/connector')
-const { readCaps } = require('../helper')
+import 'dotenv/config'
+import { assert } from 'chai'
+import { EventEmitter } from 'events'
+import _ from 'lodash'
+import BotiumConnectorCognigy from '../../../src/connector.js'
+import { readCaps } from '../helper.js'
 
 describe('connector', function () {
   beforeEach(async function () {
