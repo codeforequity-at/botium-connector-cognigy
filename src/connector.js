@@ -3,13 +3,12 @@ import _ from 'lodash'
 import createDebug from 'debug'
 import { URL } from 'url'
 import { v4 as uuidv4 } from 'uuid'
-import { createRequire } from 'module'
 import { SocketClient } from '@cognigy/socket-client'
+import botiumCore from 'botium-core'
 
-const require = createRequire(import.meta.url)
-const SimpleRestContainer = require('botium-core/src/containers/plugins/SimpleRestContainer')
-const { executeHook, getHook } = require('botium-core/src/helpers/HookUtils')
-const CoreCapabilities = require('botium-core/src/Capabilities')
+const SimpleRestContainer = botiumCore.Lib.SimpleRestContainer
+const { executeHook, getHook } = botiumCore.HookUtils
+const CoreCapabilities = botiumCore.Capabilities
 
 const debug = createDebug('botium-connector-cognigy')
 
