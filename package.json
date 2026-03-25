@@ -25,6 +25,9 @@
     "test-nightly-rest": "mocha test/nightly/rest/**/*spec.js",
     "test-nightly-socketio": "mocha test/nightly/socketio/**/*spec.js"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "author": "Botium GmbH",
   "license": "MIT",
   "devDependencies": {
@@ -46,7 +49,7 @@
   },
   "dependencies": {
     "@cognigy/rest-api-client": "^0.11.0",
-    "@cognigy/socket-client": "^4.7.0",
+    "@cognigy/socket-client": "~4.8.3",
     "debug": "^4.1.1",
     "lodash": "^4.17.15",
     "mime-types": "^2.1.24",
