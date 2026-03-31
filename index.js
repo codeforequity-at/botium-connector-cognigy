@@ -1,11 +1,15 @@
-const fs = require('fs')
-const path = require('path')
-const BotiumConnectorCognigyClass = require('./src/connector')
-const { importHandler, importArgs } = require('./src/intents')
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import BotiumConnectorCognigyClass from './src/connector.js'
+import { importHandler, importArgs } from './src/intents.js'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const logo = fs.readFileSync(path.join(__dirname, 'logo.png')).toString('base64')
 
-module.exports = {
+export default {
   PluginVersion: 1,
   PluginClass: BotiumConnectorCognigyClass,
   Import: {

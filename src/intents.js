@@ -1,7 +1,9 @@
-const _ = require('lodash')
-const { RestAPIClient } = require('@cognigy/rest-api-client')
-const { BotDriver } = require('botium-core')
-const debug = require('debug')('botium-connector-cognigy-intents')
+import _ from 'lodash'
+import { RestAPIClient } from '@cognigy/rest-api-client'
+import { BotDriver } from 'botium-core'
+import createDebug from 'debug'
+
+const debug = createDebug('botium-connector-cognigy-intents')
 
 const getCaps = (caps) => {
   const result = caps || {}
@@ -47,11 +49,11 @@ const _buildClient = (caps) => {
   return client
 }
 
-const importCognigyIntents = async ({ caps, buildconvos }, { statusCallback }) => {
-  const status = (log, obj) => {
-    if (obj) debug(log, obj)
-    else debug(log)
-    if (statusCallback) statusCallback(log, obj)
+const importCognigyIntents = async ({ caps, buildconvos }, { statusCallback } = {}) => {
+  const status = (logMsg, obj) => {
+    if (obj) debug(logMsg, obj)
+    else debug(logMsg)
+    if (statusCallback) statusCallback(logMsg, obj)
   }
 
   const driver = new BotDriver(getCaps(caps))
@@ -207,18 +209,17 @@ const importCognigyIntents = async ({ caps, buildconvos }, { statusCallback }) =
   return { convos, utterances }
 }
 
-module.exports = {
-  importHandler: ({ caps, buildconvos, ...rest } = {}, { statusCallback } = {}) => importCognigyIntents({ caps, buildconvos, ...rest }, { statusCallback }),
-  importArgs: {
-    caps: {
-      describe: 'Capabilities',
-      type: 'json',
-      skipCli: true
-    },
-    buildconvos: {
-      describe: 'Build convo files for intent assertions (otherwise, just write utterances files)',
-      type: 'boolean',
-      default: false
-    }
+export const importHandler = ({ caps, buildconvos, ...rest } = {}, { statusCallback } = {}) => importCognigyIntents({ caps, buildconvos, ...rest }, { statusCallback })
+
+export const importArgs = {
+  caps: {
+    describe: 'Capabilities',
+    type: 'json',
+    skipCli: true
+  },
+  buildconvos: {
+    describe: 'Build convo files for intent assertions (otherwise, just write utterances files)',
+    type: 'boolean',
+    default: false
   }
 }
