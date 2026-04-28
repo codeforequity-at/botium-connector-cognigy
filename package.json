@@ -16,7 +16,7 @@
     "botium-connector-cognigy-cli": "./bin/cli.js"
   },
   "scripts": {
-    "build": "rollup -c && cp logo.png dist",
+    "build": "npm run eslint && rollup -c && cp logo.png dist",
     "prepare": "npm run build",
     "prepublishOnly": "npm run build",
     "eslint": "eslint index.js bin/**/*.js src/**/*.js",
