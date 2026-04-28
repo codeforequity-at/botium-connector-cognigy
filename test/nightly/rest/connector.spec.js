@@ -1,12 +1,12 @@
-require('dotenv').config()
-const assert = require('chai').assert
-const BotiumConnectorCognigy = require('../../../src/connector')
-const { readCaps } = require('../helper')
-const EventEmitter = require('events')
+import 'dotenv/config'
+import { assert } from 'chai'
+import { EventEmitter } from 'events'
+import BotiumConnectorCognigy from '../../../src/connector.js'
+import { readCaps } from '../helper.js'
 
 describe('connector', function () {
   beforeEach(async function () {
-    this.init = async (caps) => {    
+    this.init = async (caps) => {
       caps = Object.assign({}, readCaps(), caps)
       this.botMsgPromise = new Promise(resolve => {
         this.botMsgPromiseResolve = resolve
@@ -30,7 +30,7 @@ describe('connector', function () {
 
   it('should handle request hook', async function () {
     await this.init({ "COGNIGY_REQUEST_HOOK": ({ requestOptions, context, botium }) => {
-      requestOptions.body.sessionId = "dummySessionId";
+      requestOptions.body.sessionId = 'dummySessionId'
     } })
     await this.connector.UserSays({ messageText: 'Hello' })
     const botMsg = await this.botMsgPromise

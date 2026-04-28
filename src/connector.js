@@ -1,13 +1,16 @@
-const util = require('util')
-const _ = require('lodash')
-const debug = require('debug')('botium-connector-cognigy')
-const { URL } = require('url')
-const { v4: uuidv4 } = require('uuid')
+import util from 'util'
+import _ from 'lodash'
+import createDebug from 'debug'
+import { URL } from 'url'
+import { v4 as uuidv4 } from 'uuid'
+import { SocketClient } from '@cognigy/socket-client'
+import botiumCore from 'botium-core'
 
-const SimpleRestContainer = require('botium-core/src/containers/plugins/SimpleRestContainer')
-const { executeHook, getHook } = require('botium-core/src/helpers/HookUtils')
-const CoreCapabilities = require('botium-core/src/Capabilities')
-const { SocketClient } = require('@cognigy/socket-client')
+const SimpleRestContainer = botiumCore.Lib.SimpleRestContainer
+const { executeHook, getHook } = botiumCore.HookUtils
+const CoreCapabilities = botiumCore.Capabilities
+
+const debug = createDebug('botium-connector-cognigy')
 
 const Capabilities = {
   COGNIGY_ENDPOINT_TYPE: 'COGNIGY_ENDPOINT_TYPE',
@@ -522,4 +525,4 @@ class BotiumConnectorCognigy {
   }
 }
 
-module.exports = BotiumConnectorCognigy
+export default BotiumConnectorCognigy
