@@ -133,6 +133,14 @@ export default {
         type: 'json',
         required: false,
         advanced: true
+      },
+      {
+        name: 'COGNIGY_SOCKETIO_FINAL_PING_WAIT',
+        label: 'SocketIO Final Ping Wait Timeout',
+        description: 'Max time (in ms) to wait for Cognigy finalPing before sending the next user message anyway. Use 0 to send immediately without waiting (Default: 600000ms / 10 min)',
+        type: 'int',
+        required: false,
+        advanced: true
       }
     ],
     features: {

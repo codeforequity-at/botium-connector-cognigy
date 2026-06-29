@@ -27,12 +27,14 @@ const Capabilities = {
   COGNIGY_BODY_FROM_JSON: 'COGNIGY_BODY_FROM_JSON',
   COGNIGY_REQUEST_HOOK: 'COGNIGY_REQUEST_HOOK',
   COGNIGY_INCLUDE_EMPTY: 'COGNIGY_INCLUDE_EMPTY',
-  COGNIGY_MESSAGE_LIST_MERGE: 'COGNIGY_MESSAGE_LIST_MERGE'
+  COGNIGY_MESSAGE_LIST_MERGE: 'COGNIGY_MESSAGE_LIST_MERGE',
+  COGNIGY_SOCKETIO_FINAL_PING_WAIT: 'COGNIGY_SOCKETIO_FINAL_PING_WAIT'
 }
 
 const Defaults = {
   [Capabilities.COGNIGY_NLP_ANALYTICS_WAIT_INTERVAL]: 1000,
-  [Capabilities.COGNIGY_ENDPOINT_TYPE]: 'REST'
+  [Capabilities.COGNIGY_ENDPOINT_TYPE]: 'REST',
+  [Capabilities.COGNIGY_SOCKETIO_FINAL_PING_WAIT]: 10 * 60 * 1000
 }
 
 const _sleep = async ms => {
@@ -184,7 +186,18 @@ class BotiumConnectorCognigy {
         sessionId: this.sessionId
       })
 
+      this.finalPingReceived = true
+      this.finalPingWaitResolve = null
+      this.finalPingWaitTimeout = null
+
+      this.wsClient.on('finalPing', () => {
+        this._onFinalPing()
+      })
+
       this.wsClient.on('output', async (botMsgRoot) => {
+        debug('Bot output received')
+        this.finalPingReceived = false
+
         const botMsg = {
           sender: 'bot',
           sourceData: botMsgRoot
@@ -233,10 +246,12 @@ class BotiumConnectorCognigy {
     }
   }
 
-  UserSays (msg) {
+  async UserSays (msg) {
     if (this.caps[Capabilities.COGNIGY_ENDPOINT_TYPE] !== 'SOCKETIO') {
       return this.delegateContainer.UserSays(msg)
     } else {
+      await this._waitForFinalPing()
+
       const payload = {
         text: msg.messageText
       }
@@ -266,7 +281,9 @@ class BotiumConnectorCognigy {
         payload.data = dataToSend
       }
 
+      debug(`Sending user message via SOCKETIO: ${JSON.stringify(payload.text)}`)
       this.wsClient.sendMessage(payload.text, payload.data)
+      this.finalPingReceived = false
     }
   }
 
@@ -277,6 +294,7 @@ class BotiumConnectorCognigy {
     } else {
       this.contextData = {}
       this.sessionId = null
+      this._clearFinalPingWait()
       if (this.wsClient) {
         this.wsClient.disconnect()
         this.wsClient = null
@@ -455,6 +473,60 @@ class BotiumConnectorCognigy {
 
   _sendBotMsg (botMsg) {
     setTimeout(() => this.queueBotSays(botMsg), 0)
+  }
+
+  _getFinalPingWaitTimeoutMs () {
+    const configured = this.caps[Capabilities.COGNIGY_SOCKETIO_FINAL_PING_WAIT]
+    if (configured === undefined || configured === null || configured === '') {
+      return Defaults[Capabilities.COGNIGY_SOCKETIO_FINAL_PING_WAIT]
+    }
+    const timeoutMs = Number(configured)
+    if (!Number.isFinite(timeoutMs)) {
+      return Defaults[Capabilities.COGNIGY_SOCKETIO_FINAL_PING_WAIT]
+    }
+    return timeoutMs
+  }
+
+  _onFinalPing () {
+    this.finalPingReceived = true
+    if (this.finalPingWaitResolve) {
+      debug('finalPing received, releasing blocked user message')
+      const resolve = this.finalPingWaitResolve
+      this._clearFinalPingWait()
+      resolve()
+    } else {
+      debug('finalPing received, bot turn complete (no user message waiting)')
+    }
+  }
+
+  _waitForFinalPing () {
+    if (this.finalPingReceived) {
+      debug('finalPing already received, sending user message immediately')
+      return Promise.resolve()
+    }
+    const timeoutMs = this._getFinalPingWaitTimeoutMs()
+    if (timeoutMs <= 0) {
+      debug('finalPing wait disabled, sending user message immediately')
+      return Promise.resolve()
+    }
+    debug(`Waiting for finalPing before sending user message (timeout ${timeoutMs}ms)`)
+    return new Promise((resolve) => {
+      this.finalPingWaitResolve = resolve
+      this.finalPingWaitTimeout = setTimeout(() => {
+        debug(`finalPing wait timed out after ${timeoutMs}ms, sending user message anyway`)
+        const release = this.finalPingWaitResolve
+        this._clearFinalPingWait()
+        if (release) release()
+      }, timeoutMs)
+    })
+  }
+
+  _clearFinalPingWait () {
+    this.finalPingWaitResolve = null
+    if (this.finalPingWaitTimeout) {
+      clearTimeout(this.finalPingWaitTimeout)
+      this.finalPingWaitTimeout = null
+    }
   }
 
   async _extractNlp (botMsg) {
