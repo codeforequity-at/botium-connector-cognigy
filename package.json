@@ -1,6 +1,6 @@
 {
   "name": "botium-connector-cognigy",
-  "version": "0.0.26",
+  "version": "0.0.27",
   "description": "Botium Connector for Cognigy AI",
   "type": "module",
   "main": "dist/botium-connector-cognigy-cjs.cjs",
@@ -48,7 +48,7 @@
     "rollup-plugin-json": "^4.0.0"
   },
   "dependencies": {
-    "@cognigy/rest-api-client": "^4.98.0",
+    "@cognigy/rest-api-client": "4.93.0",
     "@cognigy/socket-client": "~4.8.3",
     "debug": "^4.1.1",
     "lodash": "^4.17.15",
