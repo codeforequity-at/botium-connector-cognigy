@@ -1,6 +1,6 @@
 {
   "name": "botium-connector-cognigy",
-  "version": "0.0.26",
+  "version": "0.0.27",
   "description": "Botium Connector for Cognigy AI",
   "type": "module",
   "main": "dist/botium-connector-cognigy-cjs.cjs",
@@ -26,7 +26,7 @@
     "test-nightly-socketio": "mocha test/nightly/socketio/**/*spec.js"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.12.0"
   },
   "author": "Botium GmbH",
   "license": "MIT",
@@ -48,14 +48,14 @@
     "rollup-plugin-json": "^4.0.0"
   },
   "dependencies": {
-    "@cognigy/rest-api-client": "4.93.0",
+    "@cognigy/rest-api-client": "^2026.22.0",
     "@cognigy/socket-client": "~4.8.3",
     "debug": "^4.1.1",
     "lodash": "^4.17.15",
     "mime-types": "^2.1.24",
     "mkdirp": "^1.0.4",
     "slug": "^5.1.0",
-    "uuid": "^9.0.0",
+    "uuid": "^14.0.3",
     "yargs": "^17.3.0"
   },
   "peerDependencies": {
