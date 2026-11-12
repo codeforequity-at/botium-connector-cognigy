@@ -2,7 +2,7 @@ import util from 'util'
 import _ from 'lodash'
 import createDebug from 'debug'
 import { URL } from 'url'
-import { randomUUID } from 'crypto'
+import { v4 as uuidv4 } from 'uuid'
 import { SocketClient } from '@cognigy/socket-client'
 import botiumCore from 'botium-core'
 
@@ -178,7 +178,7 @@ class BotiumConnectorCognigy {
     if (this.caps[Capabilities.COGNIGY_ENDPOINT_TYPE] !== 'SOCKETIO') {
       return this.delegateContainer.Start()
     } else {
-      this.sessionId = randomUUID()
+      this.sessionId = uuidv4()
       const cognigyUrl = new URL(this.caps[Capabilities.COGNIGY_URL])
       this.wsClient = new SocketClient(cognigyUrl.origin, cognigyUrl.pathname.replace('/', ''), {
         forceWebsockets: true,
